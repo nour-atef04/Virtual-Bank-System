@@ -1,5 +1,14 @@
 package com.example.user_service.repository;
 
-public interface UserRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.example.user_service.model.User;
+
+import java.util.UUID;
+
+public interface UserRepository extends JpaRepository<User, UUID>{
+
+    User findByUsername(String username);
+    User findByEmail(String email);
 
 }
