@@ -7,11 +7,14 @@ import lombok.Data;
 @Data
 public class UserResponse {
 
-    public UserResponse(UUID id, String username2, String string) {
-        //TODO Auto-generated constructor stub
-    }
     private UUID userId;
     private String username;
     private String message;
+
+    public UserResponse(UUID userId, String username, String message) {
+        this.userId = userId;
+        this.username = username;
+        this.message = message;
+    }
 
 }

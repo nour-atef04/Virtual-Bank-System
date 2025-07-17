@@ -43,7 +43,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}/profile")
-    public ResponseEntity<UserProfileResponse> getProfile(@PathVariable("userId") UUID userId){
+    public ResponseEntity<UserProfileResponse> getProfile(@PathVariable UUID userId){
         return ResponseEntity.ok(userService.getProfileById(userId));
     }
     

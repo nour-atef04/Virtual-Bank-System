@@ -19,7 +19,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", columnDefinition = "CHAR(36)")
+    @Column(name = "id", columnDefinition = "BINARY(16)")
     private UUID id;
 
     @Column(name = "username", length = 50, unique = true, nullable = false)
