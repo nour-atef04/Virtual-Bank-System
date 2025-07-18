@@ -5,9 +5,9 @@ import java.util.UUID;
 import lombok.Data;
 
 @Data
-public class UserProfileResponse {
+public class UserProfile {
 
-    public UserProfileResponse(UUID userId, String username, String email, String firstName, String lastName) {
+    public UserProfile(UUID userId, String username, String email, String firstName, String lastName) {
         this.userId = userId;
         this.username = username;
         this.email = email;

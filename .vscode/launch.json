@@ -8,6 +8,38 @@
       "mainClass": "com.example.user_service.UserServiceApplication",
       "projectName": "user-service",
       "args": "",
+      "envFile": "${workspaceFolder}/.env",
+      "vmArgs": " -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=50999 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dspring.jmx.enabled=true -Djava.rmi.server.hostname=localhost -Dspring.application.admin.enabled=true -Dspring.boot.project.name=user-service"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot-LoggingServiceApplication<logging-service>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.example.logging_service.LoggingServiceApplication",
+      "projectName": "logging-service",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env",
+      "vmArgs": " -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=51003 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dspring.jmx.enabled=true -Djava.rmi.server.hostname=localhost -Dspring.application.admin.enabled=true -Dspring.boot.project.name=logging-service"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot-BffServiceApplication<bff-service>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.example.bff_service.BffServiceApplication",
+      "projectName": "bff-service",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot-TransactionServiceApplication<transaction-service>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.example.transaction_service.TransactionServiceApplication",
+      "projectName": "transaction-service",
+      "args": "",
       "envFile": "${workspaceFolder}/.env"
     }
   ]

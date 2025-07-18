@@ -5,12 +5,12 @@ import java.util.UUID;
 import lombok.Data;
 
 @Data
-public class LoginUserResponse {
+public class LoginResponse {
 
-        private UUID userId;
+    private UUID userId;
     private String username;
 
-    public LoginUserResponse(UUID userId, String username) {
+    public LoginResponse(UUID userId, String username) {
         this.userId = userId;
         this.username = username;
     }

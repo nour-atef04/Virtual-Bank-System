@@ -5,11 +5,11 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.example.user_service.dto.LoginRequest;
-import com.example.user_service.dto.LoginUserResponse;
-import com.example.user_service.dto.RegisterRequest;
-import com.example.user_service.dto.UserProfileResponse;
-import com.example.user_service.dto.RegisterUserResponse;
+import com.example.user_service.dto.UserLogin;
+import com.example.user_service.dto.LoginResponse;
+import com.example.user_service.dto.UserRegistration;
+import com.example.user_service.dto.UserProfile;
+import com.example.user_service.dto.UserResponse;
 import com.example.user_service.model.User;
 import com.example.user_service.repository.UserRepository;
 
@@ -27,7 +27,7 @@ public class UserServiceImpl implements UserService {
     private BCryptPasswordEncoder passwordEncoder;
 
     @Override
-    public RegisterUserResponse register(RegisterRequest request) {
+    public UserResponse register(UserRegistration request) {
 
         if (userRepository.findByUsername(request.getUsername()) != null
                 || userRepository.findByEmail(request.getEmail()) != null) {
@@ -43,32 +43,32 @@ public class UserServiceImpl implements UserService {
 
             User savedUser = userRepository.save(newUser);
 
-            return new RegisterUserResponse(savedUser.getId(), savedUser.getUsername(), "User registered successfully.");
+            return new UserResponse(savedUser.getId(), savedUser.getUsername(), "User registered successfully.");
 
         }
 
     }
 
     @Override
-    public LoginUserResponse login(LoginRequest request) throws IllegalAccessException {
+    public LoginResponse login(UserLogin request) throws IllegalAccessException {
 
         User user = userRepository.findByUsername(request.getUsername());
         if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new IllegalAccessException("Invalid username or password");
         } else {
-            return new LoginUserResponse(user.getId(), user.getUsername());
+            return new LoginResponse(user.getId(), user.getUsername());
         }
 
     }
 
     @Override
-    public UserProfileResponse getProfileById(UUID userId) {
+    public UserProfile getProfileById(UUID userId) {
 
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
             throw new EntityNotFoundException("User with ID " + userId + " not found.");
         } else {
-            return new UserProfileResponse(
+            return new UserProfile(
                     user.getId(),
                     user.getUsername(),
                     user.getEmail(),

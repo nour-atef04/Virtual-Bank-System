@@ -2,16 +2,16 @@ package com.example.user_service.service;
 
 import java.util.UUID;
 
-import com.example.user_service.dto.LoginRequest;
-import com.example.user_service.dto.LoginUserResponse;
-import com.example.user_service.dto.RegisterRequest;
-import com.example.user_service.dto.UserProfileResponse;
-import com.example.user_service.dto.RegisterUserResponse;
+import com.example.user_service.dto.UserLogin;
+import com.example.user_service.dto.LoginResponse;
+import com.example.user_service.dto.UserRegistration;
+import com.example.user_service.dto.UserProfile;
+import com.example.user_service.dto.UserResponse;
 
 public interface UserService {
 
-    RegisterUserResponse register(RegisterRequest request);
-    LoginUserResponse login(LoginRequest request) throws IllegalAccessException;
-    UserProfileResponse getProfileById(UUID userId);
+    UserResponse register(UserRegistration request);
+    LoginResponse login(UserLogin request) throws IllegalAccessException;
+    UserProfile getProfileById(UUID userId);
 
 }
