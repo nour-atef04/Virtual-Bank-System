@@ -75,22 +75,5 @@ public class AccountController {
     }
 
 
-    @GetMapping("/users/{userId}/accounts")
-    public ResponseEntity<?> getUserAccounts(@PathVariable UUID userId) {
-        List<Account> accounts = accountService.getAccountsByUserId(userId);
-
-        List<AccountDetailsResponse> response = accounts.stream()
-                .map(account -> AccountDetailsResponse.builder()
-                        .accountId(account.getId())
-                        .accountNumber(account.getAccountNumber())
-                        .accountType(account.getAccountType())
-                        .balance(account.getBalance())
-                        .status(account.getStatus())
-                        .build())
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(response);
-    }
-
 
 }

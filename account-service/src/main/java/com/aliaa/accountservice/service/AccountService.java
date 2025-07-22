@@ -83,9 +83,8 @@ public class AccountService {
 
     public Account getAccountById(UUID accountId) {
         return accountRepository.findById(accountId)
-                .orElseThrow(() -> new IllegalArgumentException("Account with ID " + accountId + " not found."));
+                .orElseThrow(() -> new IllegalArgumentException("Account with ID " + accountId + " not found"));
     }
-
 
     @Transactional
     public void transferFunds(UUID fromAccountId, UUID toAccountId, BigDecimal amount) {

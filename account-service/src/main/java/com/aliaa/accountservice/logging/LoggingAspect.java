@@ -26,7 +26,7 @@ public class LoggingAspect {
         this.loggingProducer = loggingProducer;
     }
 
-    @Before("execution(* com.aliaa.accountservice.controller.*.*(..))")
+    @Before("execution(* com.aliaa.accountservice.controller..*.*(..))")
     public void logBeforeRequest(JoinPoint joinPoint) {
         Object[] args = joinPoint.getArgs();
         if (args.length > 0) {
@@ -35,7 +35,7 @@ public class LoggingAspect {
         }
     }
 
-    @AfterReturning(pointcut = "execution(* com.aliaa.accountservice.controller.*.*(..))",
+    @AfterReturning(pointcut = "execution(* com.aliaa.accountservice.controller..*.*(..))",
             returning = "result")
     public void logAfterSuccess(Object result) {
         if (result != null) {
@@ -50,25 +50,41 @@ public class LoggingAspect {
         }
     }
 
-    @AfterThrowing(pointcut = "execution(* com.aliaa.accountservice.controller.*.*(..))",
+    @AfterThrowing(pointcut = "execution(* com.aliaa.accountservice.controller..*.*(..))",
             throwing = "ex")
     public void logAfterException(JoinPoint joinPoint, Exception ex) {
-        // Create content map with the standardized error format
         Map<String, Object> errorContent = new LinkedHashMap<>();
-
         HttpStatus status = determineHttpStatus(ex);
 
         errorContent.put("status", status.value());
         errorContent.put("error", status.getReasonPhrase());
-        errorContent.put("message", ex.getMessage());
+
+        if (ex instanceof MethodArgumentNotValidException) {
+            String errorMsg = ((MethodArgumentNotValidException) ex).getBindingResult()
+                    .getFieldErrors()
+                    .stream()
+                    .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
+                    .findFirst()
+                    .orElse("Validation failed");
+            errorContent.put("message", errorMsg);
+        } else {
+            errorContent.put("message", ex.getMessage());
+        }
 
         loggingProducer.sendLog(errorContent, "ERROR");
     }
 
     private HttpStatus determineHttpStatus(Exception ex) {
-        if (ex instanceof MethodArgumentNotValidException ||
-                ex instanceof HttpMessageNotReadableException ||
-                ex instanceof IllegalArgumentException) {
+        if (ex instanceof MethodArgumentNotValidException) {
+            return HttpStatus.BAD_REQUEST;
+        }
+        if (ex instanceof HttpMessageNotReadableException) {
+            return HttpStatus.BAD_REQUEST;
+        }
+        if (ex instanceof IllegalArgumentException) {
+            if (ex.getMessage() != null && ex.getMessage().contains("not found")) {
+                return HttpStatus.NOT_FOUND;
+            }
             return HttpStatus.BAD_REQUEST;
         }
         return HttpStatus.INTERNAL_SERVER_ERROR;
