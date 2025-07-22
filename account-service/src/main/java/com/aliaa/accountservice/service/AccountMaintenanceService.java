@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -35,24 +36,28 @@ public class AccountMaintenanceService {
 
         List<Account> inactiveAccounts = accountRepository.findInactiveAccounts(cutoffTime);
 
+        // Safe logging of detection event
         loggingProducer.sendLog(
                 Map.of(
-                        "cutoffTime", cutoffTime,
+                        "cutoffTime", cutoffTime.toString(), // Ensure non-null
                         "inactiveAccountsCount", inactiveAccounts.size()
                 ),
                 "INACTIVE_ACCOUNTS_DETECTED"
         );
 
         inactiveAccounts.forEach(account -> {
-            account.setStatus(AccountStatus.INACTIVE);
-            loggingProducer.sendLog(
-                    Map.of(
-                            "accountId", account.getId(),
-                            "lastActivity", account.getLastActivityAt(),
-                            "status", "INACTIVE"
-                    ),
-                    "ACCOUNT_MARKED_INACTIVE"
-            );
+            if (account != null) {  // Null check for account
+                account.setStatus(AccountStatus.INACTIVE);
+
+                // Safe logging with null checks
+                Map<String, Object> logData = new HashMap<>();
+                logData.put("accountId", account.getId() != null ? account.getId().toString() : "null");
+                logData.put("lastActivity", account.getLastActivityAt() != null ?
+                        account.getLastActivityAt().toString() : "never");
+                logData.put("status", "INACTIVE");
+
+                loggingProducer.sendLog(logData, "ACCOUNT_MARKED_INACTIVE");
+            }
         });
 
         accountRepository.saveAll(inactiveAccounts);

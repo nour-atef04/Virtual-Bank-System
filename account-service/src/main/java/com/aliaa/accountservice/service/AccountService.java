@@ -1,11 +1,9 @@
 package com.aliaa.accountservice.service;
 
-import com.aliaa.accountservice.logging.LoggingProducer;
 import com.aliaa.accountservice.model.Account;
 import com.aliaa.accountservice.model.AccountStatus;
 import com.aliaa.accountservice.model.AccountType;
 import com.aliaa.accountservice.repository.AccountRepository;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -22,21 +19,11 @@ import java.util.concurrent.ThreadLocalRandom;
 public class AccountService {
 
     private final AccountRepository accountRepository;
-    private final LoggingProducer loggingProducer;
 
     @Transactional
     public Account createAccount(UUID userId, AccountType accountType, BigDecimal initialBalance) {
 
-        loggingProducer.sendLog(
-                Map.of(
-                        "userId", userId,
-                        "accountType", accountType,
-                        "initialBalance", initialBalance
-                ),
-                "ACCOUNT_CREATION_REQUEST"
-        );
 
-        // Validate input parameters
         validateAccountCreationParameters(accountType, initialBalance);
 
         // Generate unique account number
@@ -53,9 +40,7 @@ public class AccountService {
 
         Account savedAccount = accountRepository.save(account);
 
-        // Log the created account
-        loggingProducer.sendLog(savedAccount, "ACCOUNT_CREATED_SUCCESS");
-        return savedAccount;
+      return savedAccount;
     }
 
     private void validateAccountCreationParameters(AccountType accountType, BigDecimal initialBalance) {
@@ -105,18 +90,8 @@ public class AccountService {
     @Transactional
     public void transferFunds(UUID fromAccountId, UUID toAccountId, BigDecimal amount) {
 
-        loggingProducer.sendLog(
-                Map.of(
-                        "fromAccountId", fromAccountId,
-                        "toAccountId", toAccountId,
-                        "amount", amount
-                ),
-                "TRANSFER_ATTEMPT"
-        );
-
         // Validate amount
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            loggingProducer.sendLog("Invalid amount: " + amount, "TRANSFER_ERROR");
             throw new IllegalArgumentException("Amount must be greater than 0");
         }
 
@@ -126,14 +101,12 @@ public class AccountService {
 
         // Check if accounts are active
         if (fromAccount.getStatus() != AccountStatus.ACTIVE || toAccount.getStatus() != AccountStatus.ACTIVE) {
-            loggingProducer.sendLog("Transfer failed: Inactive accounts", "TRANSFER_ERROR");
             throw new IllegalArgumentException("Both accounts must be active");
         }
 
         // Check sufficient balance
         if (fromAccount.getBalance().compareTo(amount) < 0) {
-            loggingProducer.sendLog("Transfer failed: Insufficient balance", "TRANSFER_ERROR");
-            throw new IllegalArgumentException("Insufficient balance in source account");
+           throw new IllegalArgumentException("Insufficient balance in source account");
         }
 
         // Perform transfer
@@ -148,16 +121,6 @@ public class AccountService {
         accountRepository.save(fromAccount);
         accountRepository.save(toAccount);
 
-        loggingProducer.sendLog(
-                Map.of(
-                        "fromAccountId", fromAccountId,
-                        "toAccountId", toAccountId,
-                        "amount", amount,
-                        "newFromBalance", fromAccount.getBalance(),
-                        "newToBalance", toAccount.getBalance()
-                ),
-                "TRANSFER_SUCCESS"
-        );
     }
 
     public List<Account> getAccountsByUserId(UUID userId) {

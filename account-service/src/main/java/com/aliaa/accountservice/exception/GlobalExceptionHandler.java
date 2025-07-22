@@ -12,6 +12,7 @@ import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestControllerAdvice
@@ -23,65 +24,48 @@ public class GlobalExceptionHandler {
         this.loggingProducer = loggingProducer;
     }
 
-    // Handle malformed JSON requests
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(
-            HttpMessageNotReadableException ex, WebRequest request) {
-
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(WebRequest request) {
         String errorMessage = determineErrorMessage(request);
         ErrorResponse errorResponse = buildErrorResponse(HttpStatus.BAD_REQUEST, errorMessage);
-
-        logError("MALFORMED_REQUEST", errorResponse, ex);
+        logError(errorResponse);
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
-    // Handle validation errors (@Valid failures)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(
             MethodArgumentNotValidException ex) {
-
         String errorMessage = ex.getBindingResult().getFieldErrors().stream()
                 .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
                 .findFirst()
                 .orElse("Validation failed");
-
         ErrorResponse errorResponse = buildErrorResponse(HttpStatus.BAD_REQUEST, errorMessage);
 
-        logError("VALIDATION_ERROR", errorResponse, ex);
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
-    // Handle business logic errors (IllegalArgumentException)
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(
             IllegalArgumentException ex) {
-
         ErrorResponse errorResponse = buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
-
-        logError("BUSINESS_ERROR", errorResponse, ex);
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
-    // Handle all other unexpected exceptions
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleAllExceptions(
             Exception ex, WebRequest request) {
-
         ErrorResponse errorResponse = buildErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred");
-
-        logError("UNEXPECTED_ERROR", errorResponse, ex);
         return ResponseEntity.internalServerError().body(errorResponse);
     }
 
-    // --- Helper Methods ---
     private String determineErrorMessage(WebRequest request) {
         String path = request.getDescription(false);
         if (path.contains("/transfer")) {
             return "Invalid transfer request format";
         } else if (path.contains("/accounts")) {
-            return "Invalid account creation request";
+            return "Invalid account type or initial balance";
         }
         return "Invalid request format";
     }
@@ -91,17 +75,16 @@ public class GlobalExceptionHandler {
                 .status(status.value())
                 .error(status.getReasonPhrase())
                 .message(message)
-                .timestamp(LocalDateTime.now())
                 .build();
     }
 
-    private void logError(String errorType, ErrorResponse errorResponse, Exception ex) {
-        Map<String, Object> errorDetails = new HashMap<>();
-        errorDetails.put("errorType", errorType);
-        errorDetails.put("response", errorResponse);
-        errorDetails.put("exception", ex.getClass().getSimpleName());
-        errorDetails.put("exceptionMessage", ex.getMessage());
+    private void logError(ErrorResponse errorResponse) {
+        Map<String, Object> errorDetails = new LinkedHashMap<>();
+        errorDetails.put("status", errorResponse.getStatus());
+        errorDetails.put("message", errorResponse.getMessage());
+        errorDetails.put("error", errorResponse.getError());
 
-        loggingProducer.sendLog(errorDetails, "ERROR_" + errorType);
+        loggingProducer.sendLog(errorDetails, "ERROR");
     }
+
 }

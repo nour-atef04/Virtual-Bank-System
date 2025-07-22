@@ -1,13 +1,23 @@
 package com.aliaa.accountservice.logging;
 
+import com.aliaa.accountservice.dto.LogEntry;
+import com.aliaa.accountservice.logging.LoggingProducer;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.AfterReturning;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Aspect
 @Component
+@Slf4j
 public class LoggingAspect {
 
     private final LoggingProducer loggingProducer;
@@ -20,14 +30,47 @@ public class LoggingAspect {
     public void logBeforeRequest(JoinPoint joinPoint) {
         Object[] args = joinPoint.getArgs();
         if (args.length > 0) {
-            loggingProducer.sendLog(args[0], "REQUEST_" + joinPoint.getSignature().getName());
+
+            loggingProducer.sendLog(args[0], "REQUEST");
         }
     }
 
-    @AfterReturning(pointcut = "execution(* com.aliaa.accountservice.controller.*.*(..))", returning = "result")
-    public void logAfterResponse(JoinPoint joinPoint, Object result) {
+    @AfterReturning(pointcut = "execution(* com.aliaa.accountservice.controller.*.*(..))",
+            returning = "result")
+    public void logAfterSuccess(Object result) {
         if (result != null) {
-            loggingProducer.sendLog(result, "RESPONSE_" + joinPoint.getSignature().getName());
+            if (result instanceof ResponseEntity) {
+                Object responseBody = ((ResponseEntity<?>) result).getBody();
+                loggingProducer.sendLog(responseBody != null ? responseBody : "null", "RESPONSE");
+            } else {
+                loggingProducer.sendLog(result, "RESPONSE");
+            }
+        } else {
+            loggingProducer.sendLog(Collections.singletonMap("response", "null"), "RESPONSE");
         }
+    }
+
+    @AfterThrowing(pointcut = "execution(* com.aliaa.accountservice.controller.*.*(..))",
+            throwing = "ex")
+    public void logAfterException(JoinPoint joinPoint, Exception ex) {
+        // Create content map with the standardized error format
+        Map<String, Object> errorContent = new LinkedHashMap<>();
+
+        HttpStatus status = determineHttpStatus(ex);
+
+        errorContent.put("status", status.value());
+        errorContent.put("error", status.getReasonPhrase());
+        errorContent.put("message", ex.getMessage());
+
+        loggingProducer.sendLog(errorContent, "ERROR");
+    }
+
+    private HttpStatus determineHttpStatus(Exception ex) {
+        if (ex instanceof MethodArgumentNotValidException ||
+                ex instanceof HttpMessageNotReadableException ||
+                ex instanceof IllegalArgumentException) {
+            return HttpStatus.BAD_REQUEST;
+        }
+        return HttpStatus.INTERNAL_SERVER_ERROR;
     }
 }
