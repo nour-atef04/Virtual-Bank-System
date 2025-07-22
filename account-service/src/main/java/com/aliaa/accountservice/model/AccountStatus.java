@@ -1,5 +1,4 @@
-package com.example.account_service.model;
-
+package com.aliaa.accountservice.model;
 
 public enum AccountStatus {
     ACTIVE,

@@ -1,4 +1,4 @@
-package com.example.account_service.model;
+package com.aliaa.accountservice.model;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -40,6 +40,9 @@ public class Account {
     @Column(nullable = false)
     @Builder.Default
     private AccountStatus status = AccountStatus.ACTIVE;
+
+    @Column(name = "last_activity_at")
+    private LocalDateTime lastActivityAt;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
