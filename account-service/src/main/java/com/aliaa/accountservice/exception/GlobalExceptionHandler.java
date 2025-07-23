@@ -9,11 +9,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.validation.FieldError;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -35,7 +30,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(
             MethodArgumentNotValidException ex) {
-
         String errorMessage = ex.getBindingResult().getFieldErrors().stream()
                 .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
                 .findFirst()
@@ -47,20 +41,15 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgument(
-            IllegalArgumentException ex) {
-        HttpStatus status = ex.getMessage() != null && ex.getMessage().contains("not found")
-                ? HttpStatus.NOT_FOUND
-                : HttpStatus.BAD_REQUEST;
-
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        HttpStatus status = isNotFoundException(ex) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
         ErrorResponse errorResponse = buildErrorResponse(status, ex.getMessage());
         loggingProducer.sendLog(errorResponse, "ERROR");
         return ResponseEntity.status(status).body(errorResponse);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleAllExceptions(
-            Exception ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleAllExceptions() {
         ErrorResponse errorResponse = buildErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred");
@@ -68,13 +57,27 @@ public class GlobalExceptionHandler {
         return ResponseEntity.internalServerError().body(errorResponse);
     }
 
+    private boolean isNotFoundException(IllegalArgumentException ex) {
+        if (ex.getMessage() == null) {
+            return false;
+        }
+        String lowerCaseMsg = ex.getMessage().toLowerCase();
+        return lowerCaseMsg.contains("not found") || lowerCaseMsg.contains("no accounts found");
+    }
+
+
+
+
     private String determineErrorMessage(WebRequest request) {
         String path = request.getDescription(false);
         if (path.contains("/transfer")) {
             return "Invalid transfer request format";
-        } else if (path.contains("/accounts")) {
+        } else if (path.contains("/users")){
+            return "No accounts found";
+        }else if (path.contains("/accounts")) {
             return "Invalid account type or initial balance";
         }
+
         return "Invalid request format";
     }
 

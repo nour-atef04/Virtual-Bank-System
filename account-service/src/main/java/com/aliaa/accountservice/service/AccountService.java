@@ -26,10 +26,8 @@ public class AccountService {
 
         validateAccountCreationParameters(accountType, initialBalance);
 
-        // Generate unique account number
         String accountNumber = generateAccountNumber();
 
-        // Create and save account
         Account account = Account.builder()
                 .userId(userId)
                 .accountNumber(accountNumber)
@@ -125,7 +123,7 @@ public class AccountService {
     public List<Account> getAccountsByUserId(UUID userId) {
         List<Account> accounts = accountRepository.findByUserId(userId);
         if (accounts.isEmpty()) {
-            throw new IllegalArgumentException("No accounts found for user ID " + userId);
+            throw new IllegalArgumentException("No accounts found");
         }
         return accounts;
     }
