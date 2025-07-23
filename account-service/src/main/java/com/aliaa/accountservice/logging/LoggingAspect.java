@@ -1,12 +1,9 @@
 package com.aliaa.accountservice.logging;
 
-import com.aliaa.accountservice.dto.LogEntry;
-import com.aliaa.accountservice.logging.LoggingProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -35,16 +32,14 @@ public class LoggingAspect {
         }
     }
 
+    // In LoggingAspect.java
     @AfterReturning(pointcut = "execution(* com.aliaa.accountservice.controller..*.*(..))",
             returning = "result")
     public void logAfterSuccess(Object result) {
+        System.out.println("logAfterSuccess called with result: " + result); // Debug print
         if (result != null) {
-            if (result instanceof ResponseEntity) {
-                Object responseBody = ((ResponseEntity<?>) result).getBody();
-                loggingProducer.sendLog(responseBody != null ? responseBody : "null", "RESPONSE");
-            } else {
-                loggingProducer.sendLog(result, "RESPONSE");
-            }
+            loggingProducer.sendLog(result, "RESPONSE");
+
         } else {
             loggingProducer.sendLog(Collections.singletonMap("response", "null"), "RESPONSE");
         }
@@ -52,7 +47,7 @@ public class LoggingAspect {
 
     @AfterThrowing(pointcut = "execution(* com.aliaa.accountservice.controller..*.*(..))",
             throwing = "ex")
-    public void logAfterException(JoinPoint joinPoint, Exception ex) {
+    public void logAfterException(Exception ex) {
         Map<String, Object> errorContent = new LinkedHashMap<>();
         HttpStatus status = determineHttpStatus(ex);
 
