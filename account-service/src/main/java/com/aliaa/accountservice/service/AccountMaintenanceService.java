@@ -5,7 +5,6 @@ import com.aliaa.accountservice.logging.LoggingProducer;
 import com.aliaa.accountservice.model.Account;
 import com.aliaa.accountservice.model.AccountStatus;
 import com.aliaa.accountservice.repository.AccountRepository;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -36,20 +35,18 @@ public class AccountMaintenanceService {
 
         List<Account> inactiveAccounts = accountRepository.findInactiveAccounts(cutoffTime);
 
-        // Safe logging of detection event
         loggingProducer.sendLog(
                 Map.of(
-                        "cutoffTime", cutoffTime.toString(), // Ensure non-null
+                        "cutoffTime", cutoffTime.toString(),
                         "inactiveAccountsCount", inactiveAccounts.size()
                 ),
                 "INACTIVE_ACCOUNTS_DETECTED"
         );
 
         inactiveAccounts.forEach(account -> {
-            if (account != null) {  // Null check for account
+            if (account != null) {
                 account.setStatus(AccountStatus.INACTIVE);
 
-                // Safe logging with null checks
                 Map<String, Object> logData = new HashMap<>();
                 logData.put("accountId", account.getId() != null ? account.getId().toString() : "null");
                 logData.put("lastActivity", account.getLastActivityAt() != null ?

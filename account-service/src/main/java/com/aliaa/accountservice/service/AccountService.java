@@ -1,12 +1,16 @@
 package com.aliaa.accountservice.service;
 
+import com.aliaa.accountservice.dto.UserProfileResponse;
 import com.aliaa.accountservice.model.Account;
 import com.aliaa.accountservice.model.AccountStatus;
 import com.aliaa.accountservice.model.AccountType;
 import com.aliaa.accountservice.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -19,26 +23,38 @@ import java.util.concurrent.ThreadLocalRandom;
 public class AccountService {
 
     private final AccountRepository accountRepository;
+    private final WebClient.Builder webClientBuilder;
 
     @Transactional
-    public Account createAccount(UUID userId, AccountType accountType, BigDecimal initialBalance) {
+    public Mono<Account> createAccount(UUID userId, AccountType accountType, BigDecimal initialBalance) {
+        return webClientBuilder.build()
+                .get()
+                .uri("http://user-service/users/{userId}/profile", userId)
+                .retrieve()
+                .onStatus(
+                        status -> status.is5xxServerError(),
+                        response -> Mono.error(new IllegalStateException("User service unavailable"))
+                )
+                .onStatus(
+                        status -> status == HttpStatus.NOT_FOUND,
+                        response -> Mono.error(new IllegalArgumentException("User with ID " + userId + " not found"))
+                )
+                .bodyToMono(UserProfileResponse.class)
+                .cache()
+                .flatMap(userProfile -> {
+                    validateAccountCreationParameters(accountType, initialBalance);
+                    String accountNumber = generateAccountNumber();
 
+                    Account account = Account.builder()
+                            .userId(userId)
+                            .accountNumber(accountNumber)
+                            .accountType(accountType)
+                            .balance(initialBalance)
+                            .status(AccountStatus.ACTIVE)
+                            .build();
 
-        validateAccountCreationParameters(accountType, initialBalance);
-
-        String accountNumber = generateAccountNumber();
-
-        Account account = Account.builder()
-                .userId(userId)
-                .accountNumber(accountNumber)
-                .accountType(accountType)
-                .balance(initialBalance)
-                .status(AccountStatus.ACTIVE)
-                .build();
-
-        Account savedAccount = accountRepository.save(account);
-
-      return savedAccount;
+                    return Mono.fromCallable(() -> accountRepository.save(account));
+                });
     }
 
     private void validateAccountCreationParameters(AccountType accountType, BigDecimal initialBalance) {
@@ -87,37 +103,30 @@ public class AccountService {
     @Transactional
     public void transferFunds(UUID fromAccountId, UUID toAccountId, BigDecimal amount) {
 
-        // Validate amount
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Amount must be greater than 0");
         }
 
-        // Fetch accounts (throws IllegalArgumentException if not found)
         Account fromAccount = getAccountById(fromAccountId);
         Account toAccount = getAccountById(toAccountId);
 
-        // Check if accounts are active
         if (fromAccount.getStatus() != AccountStatus.ACTIVE || toAccount.getStatus() != AccountStatus.ACTIVE) {
             throw new IllegalArgumentException("Both accounts must be active");
         }
 
-        // Check sufficient balance
         if (fromAccount.getBalance().compareTo(amount) < 0) {
-           throw new IllegalArgumentException("Insufficient balance in source account");
+            throw new IllegalArgumentException("Insufficient balance in source account");
         }
 
-        // Perform transfer
         fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
         toAccount.setBalance(toAccount.getBalance().add(amount));
 
-        // Update last activity timestamp
         LocalDateTime now = LocalDateTime.now();
         fromAccount.setLastActivityAt(now);
         toAccount.setLastActivityAt(now);
 
         accountRepository.save(fromAccount);
         accountRepository.save(toAccount);
-
     }
 
     public List<Account> getAccountsByUserId(UUID userId) {
@@ -127,7 +136,4 @@ public class AccountService {
         }
         return accounts;
     }
-
-
-
 }

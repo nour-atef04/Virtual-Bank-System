@@ -23,6 +23,7 @@ public class LoggingProducer {
     }
 
     public void sendLog(Object message, String messageType) {
+
         try {
             LogEntry log = new LogEntry();
             log.setMessage(mapper.writeValueAsString(message));
@@ -30,9 +31,8 @@ public class LoggingProducer {
             log.setDateTime(java.time.LocalDateTime.now());
             kafkaTemplate.send("logs", log);
 
-            System.out.println("Log message sent: " + log.getMessage());
         } catch (Exception e) {
-            System.out.println("Error sending log message: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

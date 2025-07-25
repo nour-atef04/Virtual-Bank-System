@@ -11,11 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/accounts")
@@ -25,23 +24,22 @@ public class AccountController {
     private final AccountService accountService;
 
     @PostMapping
-    public ResponseEntity<?> createAccount(
+    public Mono<ResponseEntity<AccountResponse>> createAccount(
             @Valid @RequestBody CreateAccountRequest request) {
-            Account account = accountService.createAccount(
-                    request.getUserId(),
-                    request.getAccountType(),
-                    request.getInitialBalance());
 
-            AccountResponse response = AccountResponse.builder()
-                    .accountId(account.getId())
-                    .accountNumber(account.getAccountNumber())
-                    .message("Account created successfully.")
-                    .build();
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-
-        }
-
+        return accountService.createAccount(
+                        request.getUserId(),
+                        request.getAccountType(),
+                        request.getInitialBalance()
+                )
+                .map(account -> ResponseEntity.status(HttpStatus.CREATED)
+                        .body(AccountResponse.builder()
+                                .accountId(account.getId())
+                                .accountNumber(account.getAccountNumber())
+                                .message("Account created successfully.")
+                                .build()
+                        ));
+    }
 
     @GetMapping("/{accountId}")
     public ResponseEntity<?> getAccountDetails(@PathVariable UUID accountId) {
