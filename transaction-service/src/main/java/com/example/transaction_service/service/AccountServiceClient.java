@@ -3,6 +3,7 @@ package com.example.transaction_service.service;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -19,18 +20,23 @@ public class AccountServiceClient {
     }
 
     public AccountDetailsResponse getAccountDetails(UUID accountId) {
-        return webClient.get()
-                .uri("/{accountId}", accountId)
-                .retrieve()
-                .bodyToMono(AccountDetailsResponse.class)
-                .block();
+        try {
+            return webClient.get()
+                    .uri("/{accountId}", accountId)
+                    .retrieve()
+                    .bodyToMono(AccountDetailsResponse.class)
+                    .block();
+        } catch (Exception e) {
+            System.out.println("ERROR calling Account Service for ID " + accountId + ": " + e.getMessage());
+            throw e; // rethrow to maintain behavior
+        }
     }
 
     public void transferFunds(UUID fromAccountId, UUID toAccountId, BigDecimal amount) {
 
         TransferRequest transferRequest = new TransferRequest(fromAccountId, toAccountId, amount);
 
-        webClient.post()
+        webClient.put()
                 .uri("/transfer")
                 .bodyValue(transferRequest)
                 .retrieve()
