@@ -38,6 +38,19 @@ public class LoggingAspect {
         }
     }
 
+    @AfterReturning(pointcut = "execution(* com.example.transaction_service.controller..*.*(..))", returning = "result")
+    public void logAfterResponse(JoinPoint joinPoint, Object result) {
+        Object responseBody = result;
+
+        // If it's a ResponseEntity, extract the body
+        if (result instanceof ResponseEntity) {
+            ResponseEntity<?> responseEntity = (ResponseEntity<?>) result;
+            responseBody = responseEntity.getBody();
+        }
+
+        loggingProducer.sendLog(responseBody, "RESPONSE");
+    }
+
     @AfterThrowing(pointcut = "execution(* com.example.transaction_service.controller..*.*(..))", throwing = "ex")
     public void logAfterException(JoinPoint joinPoint, Throwable ex) {
         Map<String, Object> errorLog = new LinkedHashMap<>();
