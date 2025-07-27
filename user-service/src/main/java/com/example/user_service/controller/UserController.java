@@ -30,30 +30,21 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private LoggingProducer loggingProducer;
-
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody UserRegistration request) {
-        loggingProducer.sendLog(LogMapper.toLoggable(request), "Request");
         UserResponse userResponse = userService.register(request);
-        loggingProducer.sendLog(userResponse, "Response");
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody UserLogin request) throws IllegalAccessException {
-        loggingProducer.sendLog(LogMapper.toLoggable(request), "Request");
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody UserLogin request){
         LoginResponse loginResponse = userService.login(request);
-        loggingProducer.sendLog(loginResponse, "Response");
         return ResponseEntity.ok(loginResponse);
     }
 
     @GetMapping("/{userId}/profile")
     public ResponseEntity<UserProfile> getProfile(@PathVariable UUID userId) {
-        loggingProducer.sendLog(java.util.Collections.singletonMap("userId", userId), "Request");
         UserProfile userProfile = userService.getProfileById(userId);
-        loggingProducer.sendLog(userProfile, "Response");
         return ResponseEntity.ok(userProfile);
     }
 
