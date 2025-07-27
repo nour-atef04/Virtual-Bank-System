@@ -20,7 +20,7 @@ public class LoggingAspect {
         this.loggingProducer = loggingProducer;
     }
 
-    @Before("execution(* com.example.bff_service.controller..*.*(..))")
+    @Before("execution(* com.example.bff_service.controller.*.*(..))")
     public void logBeforeRequest(JoinPoint joinPoint) {
         Object[] args = joinPoint.getArgs();
         if (args.length > 0) {
@@ -29,7 +29,7 @@ public class LoggingAspect {
     }
 
     @AfterReturning(
-            pointcut = "execution(* com.example.bff_service.controller..*.*(..))",
+            pointcut = "execution(* com.example.bff_service.controller.*.*(..))",
             returning = "result"
     )
     public void logAfterSuccess(Object result) {

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -24,25 +25,21 @@ public class DashboardServiceImpl implements DashboardService {
 
     public Mono<DashboardResponse> getDashboardData(String userId) {
         return userServiceClient.getUserProfile(userId)
+                .switchIfEmpty(Mono.defer(() ->
+                        Mono.error(new UserNotFoundException("User not found with ID: " + userId))))
                 .flatMap(userProfile ->
-                        accountServiceClient.getUserAccounts(userId) // Mono<List<AccountDto>>
-                                .flatMapMany(Flux::fromIterable) // Convert to Flux<AccountDto>
+                        accountServiceClient.getUserAccounts(userId)
+                                .defaultIfEmpty(Collections.emptyList())
+                                .flatMapMany(Flux::fromIterable)
                                 .flatMap(account ->
                                         transactionServiceClient.getAccountTransactions(account.getAccountId())
+                                                .onErrorResume(e -> Mono.just(Collections.emptyList()))
                                                 .map(account::withTransactions)
                                 )
-                                .collectList() // back to Mono<List<AccountDto>>
+                                .collectList()
                                 .map(accounts -> buildDashboardResponse(userProfile, accounts))
-                )
-                .onErrorMap(ex -> {
-                    if (ex instanceof UserNotFoundException) {
-                        return ex;
-                    }
-                    return new ServiceException("Failed to fetch dashboard data: " + ex.getMessage());
-                });
+                );
     }
-
-
 
 
 

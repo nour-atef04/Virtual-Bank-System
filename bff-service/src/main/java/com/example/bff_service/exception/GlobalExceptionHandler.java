@@ -1,7 +1,9 @@
 package com.example.bff_service.exception;
 
 import com.example.bff_service.dto.ErrorResponse;
+import com.example.bff_service.logging.LoggingProducer;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -15,6 +17,12 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private final LoggingProducer loggingProducer;
+
+    public GlobalExceptionHandler(LoggingProducer loggingProducer) {
+        this.loggingProducer = loggingProducer;
+    }
 
     @ExceptionHandler(WebExchangeBindException.class)
     public Mono<ResponseEntity<ErrorResponse>> handleValidationException(WebExchangeBindException ex) {
@@ -34,52 +42,68 @@ public class GlobalExceptionHandler {
                 .details(errors)
                 .build();
 
+        loggingProducer.sendLog(errorResponse, "ERROR");
+
         return Mono.just(ResponseEntity.badRequest().body(errorResponse));
     }
 
     @ExceptionHandler(ServiceException.class)
     public Mono<ResponseEntity<ErrorResponse>> handleServiceException(ServiceException ex) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Service Error",
-                ex.getMessage(),
-                Instant.now()
-        );
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .error("Service Error")
+                .message(ex.getMessage())
+                .timestamp(Instant.now())
+                .build();
+
+        loggingProducer.sendLog(errorResponse, "ERROR");
         return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse));
     }
 
     @ExceptionHandler(UserNotFoundException.class)
-    public Mono<ResponseEntity<ErrorResponse>> handleUserNotFoundException(UserNotFoundException ex) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.NOT_FOUND.value(),
-                "Not Found",
-                ex.getMessage(),
-                Instant.now()
-        );
-        return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse));
+    public Mono<ResponseEntity<ErrorResponse>> handleUserNotFoundException(
+            UserNotFoundException ex) {
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(HttpStatus.NOT_FOUND.value())
+                .error("Not Found")
+                .message(ex.getMessage())
+                .timestamp(Instant.now())
+                .build();
+
+        return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(errorResponse));
     }
 
     @ExceptionHandler(WebClientResponseException.class)
     public Mono<ResponseEntity<ErrorResponse>> handleWebClientException(WebClientResponseException ex) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                ex.getStatusCode().value(),
-                "Downstream Service Error",
-                ex.getResponseBodyAsString(),
-                Instant.now()
-        );
-        return Mono.just(ResponseEntity.status(ex.getStatusCode()).body(errorResponse));
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value()) != null
+                ? HttpStatus.valueOf(ex.getStatusCode().value())
+                : HttpStatus.INTERNAL_SERVER_ERROR;
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(status.value())
+                .error(status.getReasonPhrase())
+                .message("Downstream service error: " + ex.getMessage())
+                .timestamp(Instant.now())
+                .build();
+
+        loggingProducer.sendLog(errorResponse, "ERROR");
+        return Mono.just(ResponseEntity.status(status).body(errorResponse));
     }
 
     @ExceptionHandler(Exception.class)
     public Mono<ResponseEntity<ErrorResponse>> handleAllExceptions(Exception ex) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Internal Server Error",
-                "An unexpected error occurred",
-                Instant.now()
-        );
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .error("Internal Server Error")
+                .message("An unexpected error occurred")
+                .timestamp(Instant.now())
+                .build();
+
+        loggingProducer.sendLog(errorResponse, "ERROR");
+
         return Mono.just(ResponseEntity.internalServerError().body(errorResponse));
     }
-
 }
-
