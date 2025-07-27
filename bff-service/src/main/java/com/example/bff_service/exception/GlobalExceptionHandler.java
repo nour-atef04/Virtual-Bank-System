@@ -1,5 +1,6 @@
 package com.example.bff_service.exception;
 
+import com.example.bff_service.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,7 +16,6 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Handle validation errors
     @ExceptionHandler(WebExchangeBindException.class)
     public Mono<ResponseEntity<ErrorResponse>> handleValidationException(WebExchangeBindException ex) {
         Map<String, String> errors = ex.getBindingResult()
@@ -26,18 +26,17 @@ public class GlobalExceptionHandler {
                         fieldError -> fieldError.getDefaultMessage()
                 ));
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                "Validation Error",
-                "Invalid request parameters",
-                Instant.now(),
-                errors
-        );
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Validation Error")
+                .message("Invalid request parameters")
+                .timestamp(Instant.now())
+                .details(errors)
+                .build();
 
         return Mono.just(ResponseEntity.badRequest().body(errorResponse));
     }
 
-    // Handle custom ServiceException
     @ExceptionHandler(ServiceException.class)
     public Mono<ResponseEntity<ErrorResponse>> handleServiceException(ServiceException ex) {
         ErrorResponse errorResponse = new ErrorResponse(
@@ -49,7 +48,6 @@ public class GlobalExceptionHandler {
         return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse));
     }
 
-    // Handle UserNotFoundException
     @ExceptionHandler(UserNotFoundException.class)
     public Mono<ResponseEntity<ErrorResponse>> handleUserNotFoundException(UserNotFoundException ex) {
         ErrorResponse errorResponse = new ErrorResponse(
@@ -61,7 +59,6 @@ public class GlobalExceptionHandler {
         return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse));
     }
 
-    // Handle WebClient errors from downstream services
     @ExceptionHandler(WebClientResponseException.class)
     public Mono<ResponseEntity<ErrorResponse>> handleWebClientException(WebClientResponseException ex) {
         ErrorResponse errorResponse = new ErrorResponse(
@@ -73,7 +70,6 @@ public class GlobalExceptionHandler {
         return Mono.just(ResponseEntity.status(ex.getStatusCode()).body(errorResponse));
     }
 
-    // Handle all other exceptions
     @ExceptionHandler(Exception.class)
     public Mono<ResponseEntity<ErrorResponse>> handleAllExceptions(Exception ex) {
         ErrorResponse errorResponse = new ErrorResponse(
@@ -85,25 +81,5 @@ public class GlobalExceptionHandler {
         return Mono.just(ResponseEntity.internalServerError().body(errorResponse));
     }
 
-    // Enhanced ErrorResponse class
-    public static class ErrorResponse {
-        private final int status;
-        private final String error;
-        private final String message;
-        private final Instant timestamp;
-        private Map<String, String> details;
-
-        public ErrorResponse(int status, String error, String message, Instant timestamp) {
-            this.status = status;
-            this.error = error;
-            this.message = message;
-            this.timestamp = timestamp;
-        }
-
-        public ErrorResponse(int status, String error, String message, Instant timestamp, Map<String, String> details) {
-            this(status, error, message, timestamp);
-            this.details = details;
-        }
-
-    }
 }
+

@@ -1,6 +1,7 @@
 package com.example.bff_service.client;
 
 import com.example.bff_service.dto.UserProfileDto;
+import com.example.bff_service.exception.ServiceException;
 import com.example.bff_service.exception.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
@@ -30,15 +31,11 @@ public class UserServiceClient {
                         status -> status == HttpStatus.NOT_FOUND,
                         response -> Mono.error(new UserNotFoundException("User not found with ID: " + userId))
                 )
-                .onStatus(
-                        HttpStatus::isError,
+                .onStatus(status -> status.isError(),
                         response -> response.bodyToMono(String.class)
-                                .defaultIfEmpty("")
-                                .flatMap(body -> Mono.error(new RuntimeException(
-                                        "User service error | Status: " + response.statusCode() +
-                                                " | Path: /users/" + userId + "/profile" +
-                                                (body.isEmpty() ? "" : " | Body: " + body)))
-                                )
-                                .bodyToMono(UserProfileDto.class);
+                                .flatMap(error -> Mono.error(new ServiceException(
+                                        "User service error: " + response.statusCode() + " - " + error))))
+
+                .bodyToMono(UserProfileDto.class);
     }
 }

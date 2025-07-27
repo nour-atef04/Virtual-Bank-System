@@ -2,14 +2,12 @@ package com.example.bff_service.client;
 
 import com.example.bff_service.dto.TransactionDto;
 import com.example.bff_service.exception.ServiceException;
-import lombok.Value;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
 
 @Component
 public class TransactionServiceClient {
@@ -30,8 +28,8 @@ public class TransactionServiceClient {
         return webClient.get()
                 .uri("/accounts/{accountId}/transactions", accountId)
                 .retrieve()
-                .onStatus(HttpStatus::isError, response ->
-                        response.bodyToMono(String.class)
+                .onStatus(status -> status.isError(),
+                        response -> response.bodyToMono(String.class)
                                 .flatMap(error -> Mono.error(new ServiceException(
                                         "Transaction service error: " + response.statusCode() + " - " + error))))
                 .bodyToFlux(TransactionDto.class);

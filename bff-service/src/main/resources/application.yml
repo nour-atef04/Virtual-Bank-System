@@ -14,3 +14,7 @@ eureka:
   instance:
     prefer-ip-address: true
 
+services:
+  user-service: user-service
+  account-service: account-service
+  transaction-service: transaction-service
