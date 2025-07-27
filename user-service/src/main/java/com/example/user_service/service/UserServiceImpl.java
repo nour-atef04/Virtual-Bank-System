@@ -10,10 +10,12 @@ import com.example.user_service.dto.LoginResponse;
 import com.example.user_service.dto.UserRegistration;
 import com.example.user_service.dto.UserProfile;
 import com.example.user_service.dto.UserResponse;
+import com.example.user_service.exception.UserAlreadyExistsException;
+import com.example.user_service.exception.UserProfileNotFoundException;
+import com.example.user_service.exception.InvalidCredentialsException;
+
 import com.example.user_service.model.User;
 import com.example.user_service.repository.UserRepository;
-
-import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -31,7 +33,7 @@ public class UserServiceImpl implements UserService {
 
         if (userRepository.findByUsername(request.getUsername()) != null
                 || userRepository.findByEmail(request.getEmail()) != null) {
-            throw new IllegalArgumentException("Username or email already exists.");
+            throw new UserAlreadyExistsException("Username or email already exists.");
         } else {
 
             User newUser = new User();
@@ -50,11 +52,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LoginResponse login(UserLogin request) throws IllegalAccessException {
+    public LoginResponse login(UserLogin request) {
 
         User user = userRepository.findByUsername(request.getUsername());
         if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new IllegalAccessException("Invalid username or password");
+            throw new InvalidCredentialsException("Invald username or password.");
         } else {
             return new LoginResponse(user.getId(), user.getUsername());
         }
@@ -66,7 +68,7 @@ public class UserServiceImpl implements UserService {
 
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
-            throw new EntityNotFoundException("User with ID " + userId + " not found.");
+            throw new UserProfileNotFoundException("User with ID " + userId + " not found.");
         } else {
             return new UserProfile(
                     user.getId(),

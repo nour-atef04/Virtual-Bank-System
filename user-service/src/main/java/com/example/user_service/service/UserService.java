@@ -11,7 +11,7 @@ import com.example.user_service.dto.UserResponse;
 public interface UserService {
 
     UserResponse register(UserRegistration request);
-    LoginResponse login(UserLogin request) throws IllegalAccessException;
+    LoginResponse login(UserLogin request);
     UserProfile getProfileById(UUID userId);
 
 }
