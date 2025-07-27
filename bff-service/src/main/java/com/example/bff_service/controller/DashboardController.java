@@ -24,7 +24,9 @@ public class DashboardController {
 
     @GetMapping("/dashboard/{userId}")
     public Mono<ResponseEntity<?>> getDashboard(@PathVariable String userId) {
-        return dashboardService.getDashboardData(userId)
+        Mono<DashboardResponse> cachedResponse = dashboardService.getDashboardData(userId).cache();
+
+        return cachedResponse
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
                 .onErrorResume(UserNotFoundException.class, e ->
                         Mono.just(ResponseEntity.notFound().build()))
@@ -36,7 +38,6 @@ public class DashboardController {
                                         .error("Internal Server Error")
                                         .message("Failed to retrieve dashboard data: " + e.getMessage())
                                         .timestamp(Instant.now())
-                                        .build()))
-                );
+                                        .build())));
     }
 }

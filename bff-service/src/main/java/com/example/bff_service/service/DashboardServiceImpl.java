@@ -38,6 +38,10 @@ public class DashboardServiceImpl implements DashboardService {
                                 )
                                 .collectList()
                                 .map(accounts -> buildDashboardResponse(userProfile, accounts))
+                )
+                .cache()
+                .onErrorResume(UserNotFoundException.class, e ->
+                        Mono.error(e) // Re-throw to let the controller handle it
                 );
     }
 

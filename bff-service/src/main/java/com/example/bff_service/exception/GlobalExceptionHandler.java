@@ -71,9 +71,9 @@ public class GlobalExceptionHandler {
                 .timestamp(Instant.now())
                 .build();
 
-        return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(errorResponse));
+
+        loggingProducer.sendLog(errorResponse, "ERROR");
+        return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse));
     }
 
     @ExceptionHandler(WebClientResponseException.class)
