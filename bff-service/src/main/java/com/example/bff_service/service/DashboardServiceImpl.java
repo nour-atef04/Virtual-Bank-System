@@ -10,6 +10,7 @@ import com.example.bff_service.exception.ServiceException;
 import com.example.bff_service.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -23,15 +24,27 @@ public class DashboardServiceImpl implements DashboardService {
 
     public Mono<DashboardResponse> getDashboardData(String userId) {
         return userServiceClient.getUserProfile(userId)
-                .flatMap(user -> accountServiceClient.getUserAccounts(userId)
-                        .flatMap(account -> transactionServiceClient.getAccountTransactions(account.getAccountId())
-                                .collectList()
-                                .map(transactions -> account.withTransactions(transactions)))
-                        .collectList()
-                        .map(accounts -> buildDashboardResponse(user, accounts))
-                        .onErrorMap(e -> e instanceof UserNotFoundException ? e :
-                                new ServiceException("Failed to fetch dashboard data: " + e.getMessage())));
+                .flatMap(userProfile ->
+                        accountServiceClient.getUserAccounts(userId) // Mono<List<AccountDto>>
+                                .flatMapMany(Flux::fromIterable) // Convert to Flux<AccountDto>
+                                .flatMap(account ->
+                                        transactionServiceClient.getAccountTransactions(account.getAccountId())
+                                                .map(account::withTransactions)
+                                )
+                                .collectList() // back to Mono<List<AccountDto>>
+                                .map(accounts -> buildDashboardResponse(userProfile, accounts))
+                )
+                .onErrorMap(ex -> {
+                    if (ex instanceof UserNotFoundException) {
+                        return ex;
+                    }
+                    return new ServiceException("Failed to fetch dashboard data: " + ex.getMessage());
+                });
     }
+
+
+
+
 
     private DashboardResponse buildDashboardResponse(UserProfileDto userProfile, List<AccountDto> accounts) {
         return DashboardResponse.builder()

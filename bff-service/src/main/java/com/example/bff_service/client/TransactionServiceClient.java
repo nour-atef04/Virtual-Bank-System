@@ -9,6 +9,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Component
 public class TransactionServiceClient {
     private final WebClient webClient;
@@ -24,7 +26,7 @@ public class TransactionServiceClient {
                 .build();
     }
 
-    public Flux<TransactionDto> getAccountTransactions(String accountId) {
+    public Mono<List<TransactionDto>> getAccountTransactions(String accountId) {
         return webClient.get()
                 .uri("/accounts/{accountId}/transactions", accountId)
                 .retrieve()
@@ -32,6 +34,8 @@ public class TransactionServiceClient {
                         response -> response.bodyToMono(String.class)
                                 .flatMap(error -> Mono.error(new ServiceException(
                                         "Transaction service error: " + response.statusCode() + " - " + error))))
-                .bodyToFlux(TransactionDto.class);
+                .bodyToFlux(TransactionDto.class)
+                .collectList();
     }
+
 }

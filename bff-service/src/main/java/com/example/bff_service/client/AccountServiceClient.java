@@ -4,10 +4,14 @@ import com.example.bff_service.dto.AccountDto;
 import com.example.bff_service.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
+import java.util.Map;
 
 @Component
 public class AccountServiceClient {
@@ -24,7 +28,7 @@ public class AccountServiceClient {
                 .build();
     }
 
-    public Flux<AccountDto> getUserAccounts(String userId) {
+    public Mono<List<AccountDto>> getUserAccounts(String userId) {
         return webClient.get()
                 .uri("/users/{userId}/accounts", userId)
                 .retrieve()
@@ -32,6 +36,8 @@ public class AccountServiceClient {
                         response -> response.bodyToMono(String.class)
                                 .flatMap(error -> Mono.error(new ServiceException(
                                         "Account service error: " + response.statusCode() + " - " + error))))
-                .bodyToFlux(AccountDto.class);
+                .bodyToMono(new ParameterizedTypeReference<List<AccountDto>>() {});
     }
+
+
 }
