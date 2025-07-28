@@ -1,18 +1,23 @@
 package com.aliaa.accountservice.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 
-import java.time.LocalDateTime;
 
-@Data
-@Builder
-@NoArgsConstructor
+import com.aliaa.accountservice.exception.ErrorType;
+
+@Getter
 @AllArgsConstructor
 public class ErrorResponse {
     private int status;
     private String error;
     private String message;
+
+    public static ErrorResponse of(ErrorType type, String message) {
+        return new ErrorResponse(type.getStatus().value(), type.getTitle(), message);
+    }
+
+    public static ErrorResponse of(ErrorType type) {
+        return of(type, type.getDefaultMessage());
+    }
 }
