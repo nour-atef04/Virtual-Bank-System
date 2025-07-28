@@ -38,8 +38,6 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST.value())
                 .error("Validation Error")
                 .message("Invalid request parameters")
-                .timestamp(Instant.now())
-                .details(errors)
                 .build();
 
         loggingProducer.sendLog(errorResponse, "ERROR");
@@ -53,7 +51,6 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .error("Service Error")
                 .message(ex.getMessage())
-                .timestamp(Instant.now())
                 .build();
 
         loggingProducer.sendLog(errorResponse, "ERROR");
@@ -68,7 +65,6 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.NOT_FOUND.value())
                 .error("Not Found")
                 .message(ex.getMessage())
-                .timestamp(Instant.now())
                 .build();
 
 
@@ -83,10 +79,10 @@ public class GlobalExceptionHandler {
                 : HttpStatus.INTERNAL_SERVER_ERROR;
 
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .status(status.value())
-                .error(status.getReasonPhrase())
-                .message("Downstream service error: " + ex.getMessage())
-                .timestamp(Instant.now())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                                      .error("Internal Server Error")
+                                      .message("Failed to retrieve dashboard data: " + ex.getMessage())
+
                 .build();
 
         loggingProducer.sendLog(errorResponse, "ERROR");
@@ -98,8 +94,7 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .error("Internal Server Error")
-                .message("An unexpected error occurred")
-                .timestamp(Instant.now())
+                .message("Failed to retrieve dashboard data: " + ex.getMessage())
                 .build();
 
         loggingProducer.sendLog(errorResponse, "ERROR");

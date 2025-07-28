@@ -29,7 +29,6 @@ public class TransactionServiceClient {
         this.serviceName = serviceName;
         this.webClient = webClientBuilder.baseUrl("http://" + serviceName).build();
         this.objectMapper = objectMapper;
-        // Configure ObjectMapper to handle case differences
         this.objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
     }
 
