@@ -3,8 +3,6 @@ package com.example.bff_service.exception;
 import com.example.bff_service.dto.ErrorResponse;
 import com.example.bff_service.logging.LoggingProducer;
 import org.springframework.core.convert.ConversionFailedException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,7 +11,6 @@ import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
-import java.time.Instant;
 import java.util.Map;
 import java.util.stream.Collectors;
 @RestControllerAdvice
