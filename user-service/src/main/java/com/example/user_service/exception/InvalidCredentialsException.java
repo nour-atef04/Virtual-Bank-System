@@ -1,13 +1,12 @@
 package com.example.user_service.exception;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
+public class InvalidCredentialsException extends BaseServiceException {
 
-@ResponseStatus(HttpStatus.UNAUTHORIZED)
-public class InvalidCredentialsException extends RuntimeException{
-
-    public InvalidCredentialsException(String message){
-        super(message);
+    public InvalidCredentialsException() {
+        super(ErrorType.INVALID_CREDENTIALS, ErrorType.INVALID_CREDENTIALS.getDefaultMessage());
     }
 
+    public InvalidCredentialsException(String customMessage) {
+        super(ErrorType.INVALID_CREDENTIALS, customMessage);
+    }
 }
