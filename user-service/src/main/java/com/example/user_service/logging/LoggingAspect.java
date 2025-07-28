@@ -60,7 +60,7 @@ public class LoggingAspect {
         loggingProducer.sendLog(responseBody, "RESPONSE");
     }
 
-    @AfterThrowing(pointcut = "execution(* com.example.user_service.controller..*.*(..))", throwing = "ex")
+    @AfterThrowing(pointcut = "execution(* com.example.user_service..*.*(..))", throwing = "ex")
     public void logAfterException(JoinPoint joinPoint, Throwable ex) {
         Map<String, Object> errorLog = new LinkedHashMap<>();
 

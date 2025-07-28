@@ -8,12 +8,15 @@ import com.example.transaction_service.dto.TransferRequestExecution;
 import com.example.transaction_service.dto.TransferRequestInitiation;
 import com.example.transaction_service.dto.TransferResponse;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 public interface TransactionService {
 
-    TransferResponse initiateTransaction(TransferRequestInitiation request);
+    Mono<TransferResponse> initiateTransaction(TransferRequestInitiation request);
 
-    TransferResponse executeTransaction(TransferRequestExecution request);
+    Mono<TransferResponse> executeTransaction(TransferRequestExecution request);
 
-    List<TransactionDetail> getTransactionsForAccount(UUID accountId);
+    Flux<TransactionDetail> getTransactionsForAccount(UUID accountId);
 
 }

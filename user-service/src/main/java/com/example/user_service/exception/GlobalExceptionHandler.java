@@ -9,7 +9,6 @@ import org.springframework.messaging.handler.annotation.support.MethodArgumentTy
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.method.annotation.MethodArgumentConversionNotSupportedException;
 
 import com.example.user_service.dto.ErrorResponse;
 
@@ -68,16 +67,6 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
 
-        @ExceptionHandler(MethodArgumentConversionNotSupportedException.class)
-        public ResponseEntity<ErrorResponse> handleConversionNotSupported(
-                        MethodArgumentConversionNotSupportedException ex) {
-                ErrorResponse error = new ErrorResponse(
-                                HttpStatus.BAD_REQUEST.value(),
-                                "Bad Request",
-                                "Invalid UUID format: " + ex.getValue());
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-        }
-        
 
         // For other unhandled exceptions
         @ExceptionHandler(Exception.class)
