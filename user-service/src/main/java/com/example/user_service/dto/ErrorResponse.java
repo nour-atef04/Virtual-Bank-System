@@ -1,18 +1,21 @@
 package com.example.user_service.dto;
 
-import lombok.Data;
+import com.example.user_service.exception.ErrorType;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-@Data
+@Getter
+@AllArgsConstructor
 public class ErrorResponse {
-
     private int status;
     private String error;
     private String message;
 
-    public ErrorResponse(int status, String error, String message) {
-        this.status = status;
-        this.error = error;
-        this.message = message;
+    public static ErrorResponse of(ErrorType type, String message) {
+        return new ErrorResponse(type.getStatus().value(), type.getTitle(), message);
     }
 
+    public static ErrorResponse of(ErrorType type) {
+        return of(type, type.getDefaultMessage());
+    }
 }
