@@ -6,7 +6,6 @@ import com.example.bff_service.client.UserServiceClient;
 import com.example.bff_service.dto.AccountDto;
 import com.example.bff_service.dto.DashboardResponse;
 import com.example.bff_service.dto.UserProfileDto;
-import com.example.bff_service.exception.ServiceException;
 import com.example.bff_service.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,8 +32,17 @@ public class DashboardServiceImpl implements DashboardService {
                                 .flatMapMany(Flux::fromIterable)
                                 .flatMap(account ->
                                         transactionServiceClient.getAccountTransactions(account.getAccountId())
+                                                .defaultIfEmpty(Collections.emptyList())
                                                 .onErrorResume(e -> Mono.just(Collections.emptyList()))
-                                                .map(account::withTransactions)
+                                                .map(transactions -> {
+                                                    AccountDto accountWithTransactions = new AccountDto();
+                                                    accountWithTransactions.setAccountId(account.getAccountId());
+                                                    accountWithTransactions.setAccountNumber(account.getAccountNumber());
+                                                    accountWithTransactions.setAccountType(account.getAccountType());
+                                                    accountWithTransactions.setBalance(account.getBalance());
+                                                    accountWithTransactions.setTransactions(transactions);
+                                                    return accountWithTransactions;
+                                                })
                                 )
                                 .collectList()
                                 .map(accounts -> buildDashboardResponse(userProfile, accounts))
@@ -44,8 +52,6 @@ public class DashboardServiceImpl implements DashboardService {
                         Mono.error(e) // Re-throw to let the controller handle it
                 );
     }
-
-
 
     private DashboardResponse buildDashboardResponse(UserProfileDto userProfile, List<AccountDto> accounts) {
         return DashboardResponse.builder()
