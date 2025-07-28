@@ -1,13 +1,12 @@
 package com.aliaa.accountservice.exception;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
+public class UserProfileNotFoundException extends BaseServiceException {
 
-@ResponseStatus(HttpStatus.NOT_FOUND)
-public class UserProfileNotFoundException extends RuntimeException{
-
-    public UserProfileNotFoundException(String message){
-        super(message);
+    public UserProfileNotFoundException() {
+        super(ErrorType.USER_NOT_FOUND, ErrorType.USER_NOT_FOUND.getDefaultMessage());
     }
 
+    public UserProfileNotFoundException(String customMessage) {
+        super(ErrorType.USER_NOT_FOUND, customMessage);
+    }
 }

@@ -1,11 +1,12 @@
 package com.aliaa.accountservice.exception;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
+public class InsufficientFundsException extends BaseServiceException {
 
-@ResponseStatus(HttpStatus.BAD_REQUEST)
-public class InsufficientFundsException extends RuntimeException {
-    public InsufficientFundsException(String message){
-        super(message);
+    public InsufficientFundsException() {
+        super(ErrorType.INSUFFICIENT_FUNDS, ErrorType.INSUFFICIENT_FUNDS.getDefaultMessage());
+    }
+
+    public InsufficientFundsException(String customMessage) {
+        super(ErrorType.INSUFFICIENT_FUNDS, customMessage);
     }
 }

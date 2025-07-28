@@ -1,11 +1,12 @@
 package com.aliaa.accountservice.exception;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
+public class InactiveAccountException extends BaseServiceException {
 
-@ResponseStatus(HttpStatus.BAD_REQUEST)
-public class InactiveAccountException extends RuntimeException {
-    public InactiveAccountException(String message){
-        super(message);
+    public InactiveAccountException() {
+        super(ErrorType.INACTIVE_ACCOUNT, ErrorType.INACTIVE_ACCOUNT.getDefaultMessage());
+    }
+
+    public InactiveAccountException(String customMessage) {
+        super(ErrorType.INACTIVE_ACCOUNT, customMessage);
     }
 }

@@ -1,13 +1,12 @@
 package com.aliaa.accountservice.exception;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
+public class InvalidAccountCreationException extends BaseServiceException {
 
-@ResponseStatus(HttpStatus.BAD_REQUEST)
-public class InvalidAccountCreationException extends RuntimeException{
-
-    public InvalidAccountCreationException(String message){
-        super(message);
+    public InvalidAccountCreationException() {
+        super(ErrorType.INVALID_ACCOUNT_CREATION, ErrorType.INVALID_ACCOUNT_CREATION.getDefaultMessage());
     }
 
+    public InvalidAccountCreationException(String customMessage) {
+        super(ErrorType.INVALID_ACCOUNT_CREATION, customMessage);
+    }
 }

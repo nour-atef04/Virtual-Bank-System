@@ -1,13 +1,12 @@
 package com.aliaa.accountservice.exception;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
+public class UserHasNoAccountsException extends BaseServiceException {
 
-@ResponseStatus(HttpStatus.NOT_FOUND)
-public class UserHasNoAccountsException extends RuntimeException{
-
-    public UserHasNoAccountsException(String message){
-        super(message);
+    public UserHasNoAccountsException() {
+        super(ErrorType.USER_HAS_NO_ACCOUNTS, ErrorType.USER_HAS_NO_ACCOUNTS.getDefaultMessage());
     }
 
+    public UserHasNoAccountsException(String customMessage) {
+        super(ErrorType.USER_HAS_NO_ACCOUNTS, customMessage);
+    }
 }
