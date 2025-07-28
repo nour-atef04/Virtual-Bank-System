@@ -1,6 +1,6 @@
 package com.example.bff_service.client;
 
-import com.example.bff_service.dto.TransactionDto;
+import com.example.bff_service.dto.*;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +33,22 @@ public class TransactionServiceClient {
                 .uri("/accounts/{accountId}/transactions", accountId)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<TransactionDto>>() {});
+    }
+
+    public Mono<TransactionInitiationResponse> initiateTransfer(TransactionInitiationRequest request) {
+        return webClient.post()
+                .uri("/transactions/transfer/initiation")
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(TransactionInitiationResponse.class);
+    }
+
+    public Mono<TransactionExecutionResponse> executeTransfer(TransactionExecutionRequest request) {
+        return webClient.post()
+                .uri("/transactions/transfer/execution")
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(TransactionExecutionResponse.class);
     }
 
 }

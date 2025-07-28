@@ -3,6 +3,9 @@ package com.example.bff_service.exception;
 import org.springframework.http.HttpStatus;
 
 public enum ErrorType {
+
+    USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "Conflict", "User already exists"),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "Unauthorized", "Invalid credentials"),
     SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Service Error", "An error occurred in the service"),
     NOT_FOUND(HttpStatus.NOT_FOUND, "Not Found", "User not found"),
     DOWNSTREAM_SERVICE_ERROR(HttpStatus.BAD_GATEWAY, "Downstream Service Error", "Error communicating with downstream service"),

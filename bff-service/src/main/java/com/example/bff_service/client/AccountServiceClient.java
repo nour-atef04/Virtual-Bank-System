@@ -1,6 +1,6 @@
 package com.example.bff_service.client;
 
-import com.example.bff_service.dto.AccountDto;
+import com.example.bff_service.dto.*;
 import com.example.bff_service.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
@@ -37,5 +37,27 @@ public class AccountServiceClient {
                 .bodyToMono(new ParameterizedTypeReference<List<AccountDto>>() {});
     }
 
+    public Mono<AccountCreationResponse> createAccount(AccountCreationRequest request) {
+        return webClient.post()
+                .uri("/accounts")
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(AccountCreationResponse.class);
+    }
+
+    public Mono<AccountTransferResponse> transferFunds(AccountTransferRequest request) {
+        return webClient.put()
+                .uri("/accounts/transfer")
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(AccountTransferResponse.class);
+    }
+
+    public Mono<AccountDto> getAccountDetails(String accountId) {
+        return webClient.get()
+                .uri("/accounts/{accountId}", accountId)
+                .retrieve()
+                .bodyToMono(AccountDto.class);
+    }
 
 }
