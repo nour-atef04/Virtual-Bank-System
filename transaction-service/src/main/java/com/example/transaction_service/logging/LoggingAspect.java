@@ -1,8 +1,11 @@
 package com.example.transaction_service.logging;
 
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.support.MethodArgumentNotValidException;
@@ -30,49 +33,86 @@ public class LoggingAspect {
         this.loggingProducer = loggingProducer;
     }
 
-    @Before("execution(* com.example.transaction_service.controller..*.*(..))")
-    public void logBeforeRequest(JoinPoint joinPoint) {
+    @Around("execution(* com.example.transaction_service.controller..*.*(..))")
+    public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
-        if (args.length > 0) {
+        if (args.length > 0 && args[0] != null) {
             loggingProducer.sendLog(args[0], "REQUEST");
         }
-    }
-
-    @AfterReturning(pointcut = "execution(* com.example.transaction_service.controller..*.*(..))", returning = "result")
-    public void logAfterResponse(JoinPoint joinPoint, Object result) {
-        Object responseBody = result;
-
-        // If it's a ResponseEntity, extract the body
-        if (result instanceof ResponseEntity) {
-            ResponseEntity<?> responseEntity = (ResponseEntity<?>) result;
-            responseBody = responseEntity.getBody();
+        Object result = joinPoint.proceed();
+        if (result instanceof Mono) {
+            return ((Mono<?>) result)
+                .doOnSuccess(response -> logResponse(response))
+                .doOnError(error -> log.error("Error in controller method", error));
+        } else if (result instanceof Flux) {
+            return ((Flux<?>) result)
+                .collectList()
+                .doOnSuccess(responses -> responses.forEach(this::logResponse))
+                .doOnError(error -> log.error("Error in controller method", error))
+                .flatMapMany(Flux::fromIterable);
         }
 
-        loggingProducer.sendLog(responseBody, "RESPONSE");
+        logResponse(result);
+        return result;
     }
 
-    @AfterThrowing(pointcut = "execution(* com.example.transaction_service.controller..*.*(..))", throwing = "ex")
-    public void logAfterException(JoinPoint joinPoint, Throwable ex) {
-        Map<String, Object> errorLog = new LinkedHashMap<>();
+    private void logResponse(Object response) {
+        Object responseBody = response;
+        if (response instanceof ResponseEntity) {
+            responseBody = ((ResponseEntity<?>) response).getBody();
+        }
 
-        if (ex instanceof com.example.transaction_service.exceptions.TransactionNotFoundException) {
-            errorLog.put("status", 404);
-            errorLog.put("error", "Not Found");
-        } else if (ex instanceof AccountNotFoundException ||
-                ex instanceof InsufficientBalanceException ||
-                ex instanceof InvalidTransactionStateException ||
-                ex instanceof MethodArgumentTypeMismatchException
-                ||
-                ex instanceof org.springframework.messaging.handler.annotation.support.MethodArgumentNotValidException) {
-            errorLog.put("status", 400);
-            errorLog.put("error", "Bad Request");
+        if (responseBody != null) {
+            loggingProducer.sendLog(responseBody, "RESPONSE");
         } else {
-            errorLog.put("status", 500);
-            errorLog.put("error", "Internal Server Error");
+            loggingProducer.sendLog(Collections.singletonMap("response", "null"), "RESPONSE");
         }
-
-        errorLog.put("message", ex.getMessage());
-        loggingProducer.sendLog(errorLog, "ERROR");
     }
-
 }
+
+// @Aspect
+// @Component
+// @Slf4j
+// public class LoggingAspect {
+
+//     private final LoggingProducer loggingProducer;
+
+//     public LoggingAspect(LoggingProducer loggingProducer) {
+//         this.loggingProducer = loggingProducer;
+//     }
+
+//     @Before("execution(* com.example.transaction_service.controller..*.*(..)) ")
+//     public void logBeforeRequest(JoinPoint joinPoint) {
+//         Object[] args = joinPoint.getArgs();
+//         if (args.length > 0) {
+//             loggingProducer.sendLog(args[0], "REQUEST");
+//         }
+//     }
+
+//     @AfterReturning(pointcut = "execution(* com.example.transaction_service.controller..*.*(..))", returning = "result")
+//     public void logAfterSuccess(Object result) {
+//         if (result instanceof Mono) {
+//             ((Mono<?>) result)
+//                     .doOnSuccess(response -> {
+//                         Object responseBody = response instanceof ResponseEntity
+//                                 ? ((ResponseEntity<?>) response).getBody()
+//                                 : response;
+//                         loggingProducer.sendLog(
+//                                 responseBody != null ? responseBody : Collections.singletonMap("response", "null"),
+//                                 "RESPONSE");
+//                     })
+//                     .subscribe();
+//         } else {
+//             Object responseBody = result;
+//             if (result instanceof ResponseEntity) {
+//                 responseBody = ((ResponseEntity<?>) result).getBody();
+//             }
+//             if (responseBody != null) {
+//                 loggingProducer.sendLog(responseBody, "RESPONSE");
+//             } else {
+//                 loggingProducer.sendLog(Collections.singletonMap("response", "null"), "RESPONSE");
+//             }
+//         }
+//     }
+
+// }

@@ -1,6 +1,12 @@
 package com.aliaa.accountservice.service;
 
 import com.aliaa.accountservice.dto.UserProfileResponse;
+import com.aliaa.accountservice.exception.AccountNotFoundException;
+import com.aliaa.accountservice.exception.InactiveAccountException;
+import com.aliaa.accountservice.exception.InsufficientFundsException;
+import com.aliaa.accountservice.exception.InvalidAccountCreationException;
+import com.aliaa.accountservice.exception.UserHasNoAccountsException;
+import com.aliaa.accountservice.exception.UserProfileNotFoundException;
 import com.aliaa.accountservice.model.Account;
 import com.aliaa.accountservice.model.AccountStatus;
 import com.aliaa.accountservice.model.AccountType;
@@ -37,7 +43,7 @@ public class AccountService {
                 )
                 .onStatus(
                         status -> status == HttpStatus.NOT_FOUND,
-                        response -> Mono.error(new IllegalArgumentException("User with ID " + userId + " not found"))
+                        response -> Mono.error(new UserProfileNotFoundException("User with ID " + userId + " not found"))
                 )
                 .bodyToMono(UserProfileResponse.class)
                 .cache()
@@ -59,19 +65,19 @@ public class AccountService {
 
     private void validateAccountCreationParameters(AccountType accountType, BigDecimal initialBalance) {
         if (accountType == null) {
-            throw new IllegalArgumentException("Account type is required. Valid types are: SAVINGS, CHECKING");
+            throw new InvalidAccountCreationException("Account type is required. Valid types are: SAVINGS, CHECKING");
         }
 
         if (!AccountType.isValidType(accountType)) {
-            throw new IllegalArgumentException("Invalid account type: " + accountType
+            throw new InvalidAccountCreationException("Invalid account type: " + accountType
                     + ". Valid types are: SAVINGS, CHECKING");
         }
 
         if (initialBalance == null) {
-            throw new IllegalArgumentException("Initial balance is required");
+            throw new InvalidAccountCreationException("Initial balance is required");
         }
         if (initialBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Initial balance cannot be negative");
+            throw new InvalidAccountCreationException("Initial balance cannot be negative");
         }
     }
 
@@ -97,25 +103,25 @@ public class AccountService {
 
     public Account getAccountById(UUID accountId) {
         return accountRepository.findById(accountId)
-                .orElseThrow(() -> new IllegalArgumentException("Account with ID " + accountId + " not found"));
+                .orElseThrow(() -> new AccountNotFoundException("Account with ID " + accountId + " not found"));
     }
 
     @Transactional
     public void transferFunds(UUID fromAccountId, UUID toAccountId, BigDecimal amount) {
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Amount must be greater than 0");
+            throw new InsufficientFundsException("Amount must be greater than 0");
         }
 
         Account fromAccount = getAccountById(fromAccountId);
         Account toAccount = getAccountById(toAccountId);
 
         if (fromAccount.getStatus() != AccountStatus.ACTIVE || toAccount.getStatus() != AccountStatus.ACTIVE) {
-            throw new IllegalArgumentException("Both accounts must be active");
+            throw new InactiveAccountException("Both accounts must be active");
         }
 
         if (fromAccount.getBalance().compareTo(amount) < 0) {
-            throw new IllegalArgumentException("Insufficient balance in source account");
+            throw new InsufficientFundsException("Insufficient balance in source account");
         }
 
         fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
@@ -132,7 +138,7 @@ public class AccountService {
     public List<Account> getAccountsByUserId(UUID userId) {
         List<Account> accounts = accountRepository.findByUserId(userId);
         if (accounts.isEmpty()) {
-            throw new IllegalArgumentException("No accounts found");
+            throw new UserHasNoAccountsException("No accounts found");
         }
         return accounts;
     }

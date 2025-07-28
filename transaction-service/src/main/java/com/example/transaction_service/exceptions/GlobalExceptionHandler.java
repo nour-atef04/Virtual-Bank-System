@@ -16,7 +16,13 @@ import com.example.transaction_service.logging.LoggingProducer;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Invalid input validation 
+    private final LoggingProducer loggingProducer;
+
+    public GlobalExceptionHandler(LoggingProducer loggingProducer) {
+        this.loggingProducer = loggingProducer;
+    }
+
+    // Invalid input validation
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException e) {
         String errorMessage = e.getBindingResult()
@@ -29,6 +35,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "Validation Error",
                 errorMessage);
+        loggingProducer.sendLog(errorResponse, "ERROR");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
@@ -39,6 +46,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "Bad Request",
                 e.getMessage());
+        loggingProducer.sendLog(errorResponse, "ERROR");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
@@ -48,7 +56,8 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "Bad Request",
-                e.getMessage()); 
+                e.getMessage());
+        loggingProducer.sendLog(errorResponse, "ERROR");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
@@ -58,7 +67,8 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "Bad Request",
-                e.getMessage()); 
+                e.getMessage());
+        loggingProducer.sendLog(errorResponse, "ERROR");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
@@ -68,7 +78,8 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
                 "Not Found",
-                e.getMessage()); 
+                e.getMessage());
+        loggingProducer.sendLog(errorResponse, "ERROR");
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
@@ -78,7 +89,8 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "Bad Request",
-                e.getMessage()); 
+                e.getMessage());
+        loggingProducer.sendLog(errorResponse, "ERROR");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
@@ -89,15 +101,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Internal Server Error",
                 e.getMessage());
+        loggingProducer.sendLog(errorResponse, "ERROR");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 }
-
-
-
-
-
-
-
-
-

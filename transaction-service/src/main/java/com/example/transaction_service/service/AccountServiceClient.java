@@ -3,12 +3,13 @@ package com.example.transaction_service.service;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.example.transaction_service.dto.AccountDetailsResponse;
 import com.example.transaction_service.dto.TransferRequest;
+
+import reactor.core.publisher.Mono;
 
 @Service
 public class AccountServiceClient {
@@ -19,29 +20,22 @@ public class AccountServiceClient {
         this.webClient = webClientBuilder.baseUrl("http://account-service/accounts").build();
     }
 
-    public AccountDetailsResponse getAccountDetails(UUID accountId) {
-        try {
-            return webClient.get()
-                    .uri("/{accountId}", accountId)
-                    .retrieve()
-                    .bodyToMono(AccountDetailsResponse.class)
-                    .block();
-        } catch (Exception e) {
-            System.out.println("ERROR calling Account Service for ID " + accountId + ": " + e.getMessage());
-            throw e; // rethrow to maintain behavior
-        }
+    public Mono<AccountDetailsResponse> getAccountDetails(UUID accountId) {
+        return webClient.get()
+                .uri("/{accountId}", accountId)
+                .retrieve()
+                .bodyToMono(AccountDetailsResponse.class);
     }
 
-    public void transferFunds(UUID fromAccountId, UUID toAccountId, BigDecimal amount) {
 
+    public Mono<Void> transferFunds(UUID fromAccountId, UUID toAccountId, BigDecimal amount) {
         TransferRequest transferRequest = new TransferRequest(fromAccountId, toAccountId, amount);
 
-        webClient.put()
+        return webClient.put()
                 .uri("/transfer")
                 .bodyValue(transferRequest)
                 .retrieve()
-                .bodyToMono(Void.class)
-                .block();
+                .bodyToMono(Void.class);
     }
 
 }
