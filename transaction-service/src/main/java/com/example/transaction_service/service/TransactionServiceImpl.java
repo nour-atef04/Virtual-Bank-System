@@ -24,11 +24,13 @@ public class TransactionServiceImpl implements TransactionService {
     public Mono<TransferResponse> initiateTransaction(TransferRequestInitiation request) {
         Mono<AccountDetailsResponse> toAccountMono = accountServiceClient
                 .getAccountDetails(request.getToAccountId())
-                .switchIfEmpty(Mono.error(new AccountNotFoundException("To account not found")))
+                // .switchIfEmpty(Mono.error(new AccountNotFoundException("To account not
+                // found")))
                 .cache();
 
         return accountServiceClient.getAccountDetails(request.getFromAccountId())
-                .switchIfEmpty(Mono.error(new AccountNotFoundException("From account not found")))
+                // .switchIfEmpty(Mono.error(new AccountNotFoundException("From account not
+                // found")))
                 .cache()
                 .flatMap(fromAccount -> {
                     if (fromAccount.getBalance().compareTo(request.getAmount()) < 0) {
@@ -99,7 +101,9 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Flux<TransactionDetail> getTransactionsForAccount(UUID accountId) {
-        return Mono.fromCallable(() -> transactionRepository.findByFromAccountIdOrToAccountId(accountId, accountId))
+        return accountServiceClient.getAccountDetails(accountId) 
+                .then(Mono.fromCallable(
+                        () -> transactionRepository.findByFromAccountIdOrToAccountId(accountId, accountId)))
                 .flatMapMany(Flux::fromIterable)
                 .filter(tx -> tx.getStatus() == TransactionStatus.SUCCESS)
                 .map(tx -> new TransactionDetail(
@@ -111,4 +115,5 @@ public class TransactionServiceImpl implements TransactionService {
                         tx.getDescription(),
                         tx.getTimestamp()));
     }
+
 }
