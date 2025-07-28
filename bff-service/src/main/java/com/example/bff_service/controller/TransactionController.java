@@ -23,19 +23,13 @@ public class TransactionController {
     public Mono<ResponseEntity<TransactionInitiationResponse>> initiateTransfer(
             @RequestBody TransactionInitiationRequest request) {
         return transactionServiceClient.initiateTransfer(request)
-                .map(ResponseEntity::ok)
-                .onErrorResume(e -> Mono.just(ResponseEntity
-                        .badRequest()
-                        .body(TransactionInitiationResponse.error(e.getMessage()))));
+                .map(ResponseEntity::ok);
     }
 
     @PostMapping("/transfer/execution")
     public Mono<ResponseEntity<TransactionExecutionResponse>> executeTransfer(
             @RequestBody TransactionExecutionRequest request) {
         return transactionServiceClient.executeTransfer(request)
-                .map(ResponseEntity::ok)
-                .onErrorResume(e -> Mono.just(ResponseEntity
-                        .badRequest()
-                        .body(TransactionExecutionResponse.error(e.getMessage()))));
+                .map(ResponseEntity::ok);
     }
 }
