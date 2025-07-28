@@ -9,16 +9,18 @@ import lombok.Data;
 @Data
 public class TransactionDetail {
 
-    private UUID transactionID;
+    private UUID transactionId;
     private UUID accountId;
+    private UUID toAccountId;
     private BigDecimal amount;
     private String description;
     private LocalDateTime timestamp;
 
-    public TransactionDetail(UUID transactionID, UUID accountId, BigDecimal amount, String description,
+    public TransactionDetail(UUID transactionId, UUID accountId, UUID toAccountId, BigDecimal amount, String description,
             LocalDateTime timestamp) {
-        this.transactionID = transactionID;
+        this.transactionId = transactionId;
         this.accountId = accountId;
+        this.toAccountId = toAccountId;
         this.amount = amount;
         this.description = description;
         this.timestamp = timestamp;

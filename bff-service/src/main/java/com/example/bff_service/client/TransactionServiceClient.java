@@ -40,13 +40,10 @@ public class TransactionServiceClient {
                 .doOnNext(response -> System.out.println("Raw response: " + response)) // Debug logging
                 .flatMap(response -> {
                     try {
-                        // Parse the response
                         List<TransactionDto> transactions = objectMapper.readValue(
                                 response,
                                 new TypeReference<List<TransactionDto>>() {}
                         );
-
-                        // Log the parsed transactions for debugging
                         System.out.println("Parsed transactions: " + transactions);
 
                         return Mono.just(transactions);

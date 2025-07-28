@@ -2,9 +2,11 @@ package com.example.bff_service.exception;
 
 import com.example.bff_service.dto.ErrorResponse;
 import com.example.bff_service.logging.LoggingProducer;
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
@@ -14,7 +16,6 @@ import reactor.core.publisher.Mono;
 import java.time.Instant;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -24,81 +25,54 @@ public class GlobalExceptionHandler {
         this.loggingProducer = loggingProducer;
     }
 
-    @ExceptionHandler(WebExchangeBindException.class)
-    public Mono<ResponseEntity<ErrorResponse>> handleValidationException(WebExchangeBindException ex) {
-        Map<String, String> errors = ex.getBindingResult()
-                .getFieldErrors()
+    @ExceptionHandler(BaseServiceException.class)
+    public Mono<ResponseEntity<ErrorResponse>> handleBaseException(BaseServiceException ex) {
+        ErrorResponse error = ErrorResponse.of(ex.getErrorType(), ex.getMessage());
+        loggingProducer.sendLog(error, "ERROR");
+        return Mono.just(ResponseEntity.status(ex.getErrorType().getStatus()).body(error));
+    }
+
+    @ExceptionHandler({WebExchangeBindException.class, MethodArgumentNotValidException.class})
+    public Mono<ResponseEntity<ErrorResponse>> handleValidation(Exception ex) {
+        Map<String, String> errors = (ex instanceof WebExchangeBindException)
+                ? ((WebExchangeBindException) ex).getFieldErrors()
                 .stream()
                 .collect(Collectors.toMap(
                         fieldError -> fieldError.getField(),
-                        fieldError -> fieldError.getDefaultMessage()
-                ));
+                        fieldError -> fieldError.getDefaultMessage()))
+                : ((MethodArgumentNotValidException) ex).getFieldErrors()
+                .stream()
+                .collect(Collectors.toMap(
+                        fieldError -> fieldError.getField(),
+                        fieldError -> fieldError.getDefaultMessage()));
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error("Validation Error")
-                .message("Invalid request parameters")
-                .build();
-
-        loggingProducer.sendLog(errorResponse, "ERROR");
-
-        return Mono.just(ResponseEntity.badRequest().body(errorResponse));
+        ErrorResponse error = ErrorResponse.of(ErrorType.VALIDATION_ERROR, "Validation failed", errors);
+        loggingProducer.sendLog(error, "ERROR");
+        return Mono.just(ResponseEntity.status(ErrorType.VALIDATION_ERROR.getStatus()).body(error));
     }
 
-    @ExceptionHandler(ServiceException.class)
-    public Mono<ResponseEntity<ErrorResponse>> handleServiceException(ServiceException ex) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .error("Service Error")
-                .message(ex.getMessage())
-                .build();
-
-        loggingProducer.sendLog(errorResponse, "ERROR");
-        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse));
-    }
-
-    @ExceptionHandler(UserNotFoundException.class)
-    public Mono<ResponseEntity<ErrorResponse>> handleUserNotFoundException(
-            UserNotFoundException ex) {
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .status(HttpStatus.NOT_FOUND.value())
-                .error("Not Found")
-                .message(ex.getMessage())
-                .build();
-
-
-        loggingProducer.sendLog(errorResponse, "ERROR");
-        return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse));
+    @ExceptionHandler(ConversionFailedException.class)
+    public Mono<ResponseEntity<ErrorResponse>> handleBadRequest(Exception ex) {
+        ErrorResponse error = ErrorResponse.of(ErrorType.BAD_REQUEST, "Invalid input: " + ex.getMessage());
+        loggingProducer.sendLog(error, "ERROR");
+        return Mono.just(ResponseEntity.status(ErrorType.BAD_REQUEST.getStatus()).body(error));
     }
 
     @ExceptionHandler(WebClientResponseException.class)
     public Mono<ResponseEntity<ErrorResponse>> handleWebClientException(WebClientResponseException ex) {
-        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value()) != null
-                ? HttpStatus.valueOf(ex.getStatusCode().value())
-                : HttpStatus.INTERNAL_SERVER_ERROR;
+        ErrorType errorType = ex.getStatusCode().is4xxClientError()
+                ? ErrorType.BAD_REQUEST
+                : ErrorType.DOWNSTREAM_ERROR;
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                                      .error("Internal Server Error")
-                                      .message("Failed to retrieve dashboard data: " + ex.getMessage())
-
-                .build();
-
-        loggingProducer.sendLog(errorResponse, "ERROR");
-        return Mono.just(ResponseEntity.status(status).body(errorResponse));
+        ErrorResponse error = ErrorResponse.of(errorType, "Downstream service error: " + ex.getMessage());
+        loggingProducer.sendLog(error, "ERROR");
+        return Mono.just(ResponseEntity.status(errorType.getStatus()).body(error));
     }
 
     @ExceptionHandler(Exception.class)
-    public Mono<ResponseEntity<ErrorResponse>> handleAllExceptions(Exception ex) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .error("Internal Server Error")
-                .message("Failed to retrieve dashboard data: " + ex.getMessage())
-                .build();
-
-        loggingProducer.sendLog(errorResponse, "ERROR");
-
-        return Mono.just(ResponseEntity.internalServerError().body(errorResponse));
+    public Mono<ResponseEntity<ErrorResponse>> handleOtherExceptions(Exception ex) {
+        ErrorResponse error = ErrorResponse.of(ErrorType.INTERNAL_ERROR, ex.getMessage());
+        loggingProducer.sendLog(error, "ERROR");
+        return Mono.just(ResponseEntity.status(ErrorType.INTERNAL_ERROR.getStatus()).body(error));
     }
 }

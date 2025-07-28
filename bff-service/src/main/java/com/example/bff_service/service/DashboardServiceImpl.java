@@ -49,7 +49,7 @@ public class DashboardServiceImpl implements DashboardService {
                 )
                 .cache()
                 .onErrorResume(UserNotFoundException.class, e ->
-                        Mono.error(e) // Re-throw to let the controller handle it
+                        Mono.error(e)
                 );
     }
 

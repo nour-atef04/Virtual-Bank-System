@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
@@ -101,19 +102,26 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Flux<TransactionDetail> getTransactionsForAccount(UUID accountId) {
-        return accountServiceClient.getAccountDetails(accountId) 
-                .then(Mono.fromCallable(
-                        () -> transactionRepository.findByFromAccountIdOrToAccountId(accountId, accountId)))
+        return accountServiceClient.getAccountDetails(accountId)
+                .then(Mono.fromCallable(() ->
+                        transactionRepository.findByFromAccountIdOrToAccountId(accountId, accountId)))
                 .flatMapMany(Flux::fromIterable)
                 .filter(tx -> tx.getStatus() == TransactionStatus.SUCCESS)
-                .map(tx -> new TransactionDetail(
-                        tx.getId(),
-                        accountId,
-                        tx.getFromAccountId().equals(accountId)
-                                ? tx.getAmount().negate()
-                                : tx.getAmount(),
-                        tx.getDescription(),
-                        tx.getTimestamp()));
+                .map(tx -> {
+                    BigDecimal amount = tx.getFromAccountId().equals(accountId)
+                            ? tx.getAmount().negate()
+                            : tx.getAmount();
+
+                    return new TransactionDetail(
+                            tx.getId(),
+                            accountId,
+                            tx.getToAccountId(),
+                            amount,
+                            tx.getDescription(),
+                            tx.getTimestamp()
+                    );
+                });
     }
+
 
 }
