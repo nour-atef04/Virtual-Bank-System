@@ -18,13 +18,4 @@ public class AccountDto {
     private double balance;
     private List<TransactionDto> transactions;
 
-    public AccountDto withTransactions(List<TransactionDto> transactions) {
-        return AccountDto.builder()
-                .accountId(this.accountId)
-                .accountNumber(this.accountNumber)
-                .accountType(this.accountType)
-                .balance(this.balance)
-                .transactions(transactions)
-                .build();
-    }
 }

@@ -6,7 +6,6 @@ import com.example.bff_service.client.UserServiceClient;
 import com.example.bff_service.dto.AccountDto;
 import com.example.bff_service.dto.DashboardResponse;
 import com.example.bff_service.dto.UserProfileDto;
-import com.example.bff_service.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -24,16 +23,12 @@ public class DashboardServiceImpl implements DashboardService {
 
     public Mono<DashboardResponse> getDashboardData(String userId) {
         return userServiceClient.getUserProfile(userId)
-                .switchIfEmpty(Mono.defer(() ->
-                        Mono.error(new UserNotFoundException("User not found with ID: " + userId))))
                 .flatMap(userProfile ->
                         accountServiceClient.getUserAccounts(userId)
                                 .defaultIfEmpty(Collections.emptyList())
                                 .flatMapMany(Flux::fromIterable)
                                 .flatMap(account ->
                                         transactionServiceClient.getAccountTransactions(account.getAccountId())
-                                                .defaultIfEmpty(Collections.emptyList())
-                                                .onErrorResume(e -> Mono.just(Collections.emptyList()))
                                                 .map(transactions -> {
                                                     AccountDto accountWithTransactions = new AccountDto();
                                                     accountWithTransactions.setAccountId(account.getAccountId());
@@ -47,10 +42,7 @@ public class DashboardServiceImpl implements DashboardService {
                                 .collectList()
                                 .map(accounts -> buildDashboardResponse(userProfile, accounts))
                 )
-                .cache()
-                .onErrorResume(UserNotFoundException.class, e ->
-                        Mono.error(e)
-                );
+                .cache();
     }
 
     private DashboardResponse buildDashboardResponse(UserProfileDto userProfile, List<AccountDto> accounts) {
