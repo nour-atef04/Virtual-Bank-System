@@ -27,7 +27,7 @@ public class UserServiceClient {
                 .uri("/users/{userId}/profile", userId)
                 .retrieve()
                 .onStatus(HttpStatus.NOT_FOUND::equals, response ->
-                        Mono.error(new UserNotFoundException("User not found with ID: " + userId)))
+                        Mono.error(new UserNotFoundException(userId)))
                 .bodyToMono(UserProfileDto.class);
     }
 
