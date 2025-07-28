@@ -15,68 +15,33 @@ import com.example.user_service.dto.ErrorResponse;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-        // Handling validation errors
+        @ExceptionHandler(BaseServiceException.class)
+        public ResponseEntity<ErrorResponse> handleBaseException(BaseServiceException ex) {
+                ErrorResponse error = ErrorResponse.of(ex.getErrorType(), ex.getMessage());
+                return ResponseEntity.status(ex.getErrorType().getStatus()).body(error);
+        }
+
         @ExceptionHandler(MethodArgumentNotValidException.class)
-        public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException e) {
+        public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
+                String message = ex.getBindingResult()
+                        .getFieldErrors()
+                        .stream()
+                        .map(e -> e.getField() + ": " + e.getDefaultMessage())
+                        .collect(Collectors.joining(", "));
 
-                String errorMessage = e.getBindingResult()
-                                .getFieldErrors()
-                                .stream()
-                                .map(err -> err.getField() + ": " + err.getDefaultMessage())
-                                .collect(Collectors.joining(", "));
-
-                ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Validation Error",
-                                errorMessage);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                .body(errorResponse);
-
+                ErrorResponse error = ErrorResponse.of(ErrorType.VALIDATION_ERROR, message);
+                return ResponseEntity.status(ErrorType.VALIDATION_ERROR.getStatus()).body(error);
         }
 
-        // Handles user already exists
-        @ExceptionHandler(UserAlreadyExistsException.class)
-        public ResponseEntity<ErrorResponse> handleUserAlreadyExists(UserAlreadyExistsException e) {
-                ErrorResponse errorResponse = new ErrorResponse(HttpStatus.CONFLICT.value(), "Conflict",
-                                e.getMessage());
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+        @ExceptionHandler({ConversionFailedException.class, MethodArgumentTypeMismatchException.class})
+        public ResponseEntity<ErrorResponse> handleBadRequest(Exception ex) {
+                ErrorResponse error = ErrorResponse.of(ErrorType.BAD_REQUEST, "Invalid input format: " + ex.getMessage());
+                return ResponseEntity.status(ErrorType.BAD_REQUEST.getStatus()).body(error);
         }
 
-        // Handles invalid credentials
-        @ExceptionHandler(InvalidCredentialsException.class)
-        public ResponseEntity<ErrorResponse> handleInvalidCredentials(InvalidCredentialsException e) {
-                ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), "Unauthorized",
-                                e.getMessage());
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-        }
-
-        // Handles profile not found
-        @ExceptionHandler(UserProfileNotFoundException.class)
-        public ResponseEntity<ErrorResponse> handleUserProfileNotFound(UserProfileNotFoundException e) {
-                ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND.value(), "Not Found",
-                                e.getMessage());
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
-        }
-
-        // Handles invalid input format
-        @ExceptionHandler({ ConversionFailedException.class, MethodArgumentTypeMismatchException.class })
-        public ResponseEntity<ErrorResponse> handleConversionErrors(Exception ex) {
-                ErrorResponse errorResponse = new ErrorResponse(
-                                HttpStatus.BAD_REQUEST.value(),
-                                "Bad Request",
-                                "Invalid input format: " + ex.getMessage());
-
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        }
-
-
-        // For other unhandled exceptions
         @ExceptionHandler(Exception.class)
-        public ResponseEntity<ErrorResponse> handleGeneral(Exception e) {
-
-                ErrorResponse errorResponse = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                                "Internal Server Error", e.getMessage());
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                .body(errorResponse);
-
+        public ResponseEntity<ErrorResponse> handleOtherExceptions(Exception ex) {
+                ErrorResponse error = ErrorResponse.of(ErrorType.INTERNAL_ERROR, ex.getMessage());
+                return ResponseEntity.status(ErrorType.INTERNAL_ERROR.getStatus()).body(error);
         }
-
 }
