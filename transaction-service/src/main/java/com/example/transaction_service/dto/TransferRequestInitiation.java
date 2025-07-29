@@ -5,9 +5,11 @@ import java.util.UUID;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
+@AllArgsConstructor
 public class TransferRequestInitiation {
 
     @NotNull(message = "sending account id should not be blank")

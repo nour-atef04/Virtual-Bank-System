@@ -17,16 +17,19 @@ import com.example.user_service.exception.InvalidCredentialsException;
 import com.example.user_service.model.User;
 import com.example.user_service.repository.UserRepository;
 
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     @Autowired
-    public UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Autowired
-    public BCryptPasswordEncoder passwordEncoder;
+    private BCryptPasswordEncoder passwordEncoder;
 
     @Override
     public UserResponse register(UserRegistration request) {
