@@ -1,13 +1,13 @@
 package com.example.user_service.exception;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.CONFLICT)
-public class UserAlreadyExistsException extends RuntimeException{
+public class UserAlreadyExistsException extends BaseServiceException {
 
-    public UserAlreadyExistsException(String message){
-        super(message);
+    public UserAlreadyExistsException() {
+        super(ErrorType.USER_ALREADY_EXISTS, ErrorType.USER_ALREADY_EXISTS.getDefaultMessage());
     }
 
+    public UserAlreadyExistsException(String customMessage) {
+        super(ErrorType.USER_ALREADY_EXISTS, customMessage);
+    }
 }

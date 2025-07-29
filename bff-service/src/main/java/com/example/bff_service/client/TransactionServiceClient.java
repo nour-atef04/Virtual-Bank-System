@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -32,6 +33,7 @@ public class TransactionServiceClient {
         return webClient.get()
                 .uri("/accounts/{accountId}/transactions", accountId)
                 .retrieve()
+                .onStatus(HttpStatusCode::isError, WebClientErrorHandler::handle)
                 .bodyToMono(new ParameterizedTypeReference<List<TransactionDto>>() {});
     }
 
@@ -40,6 +42,7 @@ public class TransactionServiceClient {
                 .uri("/transactions/transfer/initiation")
                 .bodyValue(request)
                 .retrieve()
+                .onStatus(HttpStatusCode::isError, WebClientErrorHandler::handle)
                 .bodyToMono(TransactionInitiationResponse.class);
     }
 
@@ -48,6 +51,7 @@ public class TransactionServiceClient {
                 .uri("/transactions/transfer/execution")
                 .bodyValue(request)
                 .retrieve()
+                .onStatus(HttpStatusCode::isError, WebClientErrorHandler::handle)
                 .bodyToMono(TransactionExecutionResponse.class);
     }
 

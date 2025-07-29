@@ -1,10 +1,10 @@
 package com.example.bff_service.client;
 
 import com.example.bff_service.dto.*;
-import com.example.bff_service.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -30,10 +30,7 @@ public class AccountServiceClient {
         return webClient.get()
                 .uri("/users/{userId}/accounts", userId)
                 .retrieve()
-                .onStatus(status -> status.isError(),
-                        response -> response.bodyToMono(String.class)
-                                .flatMap(error -> Mono.error(new ServiceException(
-                                        "Account service error: " + response.statusCode() + " - " + error))))
+                .onStatus(HttpStatusCode::isError, WebClientErrorHandler::handle)
                 .bodyToMono(new ParameterizedTypeReference<List<AccountDto>>() {});
     }
 
@@ -42,6 +39,7 @@ public class AccountServiceClient {
                 .uri("/accounts")
                 .bodyValue(request)
                 .retrieve()
+                .onStatus(HttpStatusCode::isError, WebClientErrorHandler::handle)
                 .bodyToMono(AccountCreationResponse.class);
     }
 
@@ -50,6 +48,7 @@ public class AccountServiceClient {
                 .uri("/accounts/transfer")
                 .bodyValue(request)
                 .retrieve()
+                .onStatus(HttpStatusCode::isError, WebClientErrorHandler::handle)
                 .bodyToMono(AccountTransferResponse.class);
     }
 
@@ -57,6 +56,7 @@ public class AccountServiceClient {
         return webClient.get()
                 .uri("/accounts/{accountId}", accountId)
                 .retrieve()
+                .onStatus(HttpStatusCode::isError, WebClientErrorHandler::handle)
                 .bodyToMono(AccountDto.class);
     }
 

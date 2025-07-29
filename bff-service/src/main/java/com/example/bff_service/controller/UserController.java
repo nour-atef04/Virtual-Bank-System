@@ -4,6 +4,8 @@ import com.example.bff_service.client.UserServiceClient;
 import com.example.bff_service.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +17,12 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class UserController {
     private final UserServiceClient userServiceClient;
+
+    @GetMapping("/{userId}/profile")
+    public Mono<ResponseEntity<UserProfileDto>> getProfile(@PathVariable String userId) {
+        return userServiceClient.getUserProfile(userId)
+                .map(ResponseEntity::ok);
+    }
 
     @PostMapping("/register")
     public Mono<ResponseEntity<UserRegistrationResponse>> registerUser(
