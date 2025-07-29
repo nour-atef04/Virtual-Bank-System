@@ -23,10 +23,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 public class UserServiceImpl implements UserService {
 
     @Autowired
-    private UserRepository userRepository;
+    public UserRepository userRepository;
 
     @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    public BCryptPasswordEncoder passwordEncoder;
 
     @Override
     public UserResponse register(UserRegistration request) {

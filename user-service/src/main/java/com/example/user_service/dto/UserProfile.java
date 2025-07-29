@@ -2,18 +2,12 @@ package com.example.user_service.dto;
 
 import java.util.UUID;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
+@AllArgsConstructor
 public class UserProfile {
-
-    public UserProfile(UUID userId, String username, String email, String firstName, String lastName) {
-        this.userId = userId;
-        this.username = username;
-        this.email = email;
-        this.firstName = firstName;
-        this.lastName = lastName;
-    }
 
     private UUID userId;
     private String username;
