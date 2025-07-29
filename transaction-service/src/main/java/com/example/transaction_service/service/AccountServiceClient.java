@@ -4,12 +4,14 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.example.transaction_service.dto.AccountDetailsResponse;
 import com.example.transaction_service.dto.TransferRequest;
 import com.example.transaction_service.exceptions.AccountNotFoundException;
+import com.example.transaction_service.exceptions.InsufficientBalanceException;
 
 import reactor.core.publisher.Mono;
 
@@ -42,6 +44,7 @@ public class AccountServiceClient {
                 .uri("/transfer")
                 .bodyValue(transferRequest)
                 .retrieve()
+                .onStatus(HttpStatusCode::isError, WebClientErrorHandler::handle)
                 .bodyToMono(Void.class);
     }
 

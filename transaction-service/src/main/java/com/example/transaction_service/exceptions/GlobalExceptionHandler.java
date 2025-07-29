@@ -1,5 +1,7 @@
 package com.example.transaction_service.exceptions;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.core.convert.ConversionFailedException;
@@ -21,6 +23,16 @@ public class GlobalExceptionHandler {
 
         public GlobalExceptionHandler(LoggingProducer loggingProducer) {
                 this.loggingProducer = loggingProducer;
+        }
+
+        @ExceptionHandler(DownstreamException.class)
+        public ResponseEntity<Map<String, Object>> handleDownstream(DownstreamException ex) {
+                Map<String, Object> errorBody = new LinkedHashMap<>();
+                errorBody.put("status", ex.getStatus());
+                errorBody.put("error", ex.getError());
+                errorBody.put("message", ex.getMessage());
+
+                return ResponseEntity.status(ex.getStatus()).body(errorBody);
         }
 
         @ExceptionHandler(BaseServiceException.class)

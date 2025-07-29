@@ -57,6 +57,53 @@ public class TransactionServiceImpl implements TransactionService {
 
     }
 
+    // @Override
+    // public Mono<TransferResponse> executeTransaction(TransferRequestExecution
+    // request) {
+    // return Mono.fromCallable(() ->
+    // transactionRepository.findById(request.getTransactionId())
+    // .orElseThrow(() -> new TransactionNotFoundException("Transaction not
+    // found.")))
+    // .flatMap(foundTransaction -> {
+    // if (foundTransaction.getStatus() != TransactionStatus.INITIATED) {
+    // return Mono.error(new InvalidTransactionStateException("Invalid transaction
+    // state."));
+    // }
+
+    // Mono<AccountDetailsResponse> fromAccountMono = accountServiceClient
+    // .getAccountDetails(foundTransaction.getFromAccountId())
+    // .cache();
+
+    // Mono<AccountDetailsResponse> toAccountMono = accountServiceClient
+    // .getAccountDetails(foundTransaction.getToAccountId())
+    // .cache();
+
+    // return Mono.zip(fromAccountMono, toAccountMono)
+    // .flatMap(tuple -> {
+    // AccountDetailsResponse fromAccount = tuple.getT1();
+    // AccountDetailsResponse toAccount = tuple.getT2();
+
+    // if (fromAccount.getBalance().compareTo(foundTransaction.getAmount()) < 0) {
+    // foundTransaction.setStatus(TransactionStatus.FAILED);
+    // return Mono.fromCallable(() -> transactionRepository.save(foundTransaction))
+    // .then(Mono.error(new InsufficientBalanceException("Insufficient funds.")));
+    // }
+
+    // return accountServiceClient.transferFunds(
+    // foundTransaction.getFromAccountId(),
+    // foundTransaction.getToAccountId(),
+    // foundTransaction.getAmount()).then(Mono.fromCallable(() -> {
+    // foundTransaction.setStatus(TransactionStatus.SUCCESS);
+    // Transaction updated = transactionRepository.save(foundTransaction);
+    // return new TransferResponse(
+    // updated.getId(),
+    // updated.getStatus(),
+    // updated.getTimestamp());
+    // }));
+    // });
+    // });
+    // }
+
     @Override
     public Mono<TransferResponse> executeTransaction(TransferRequestExecution request) {
         return Mono.fromCallable(() -> transactionRepository.findById(request.getTransactionId())
@@ -66,45 +113,31 @@ public class TransactionServiceImpl implements TransactionService {
                         return Mono.error(new InvalidTransactionStateException("Invalid transaction state."));
                     }
 
-                    Mono<AccountDetailsResponse> fromAccountMono = accountServiceClient
-                            .getAccountDetails(foundTransaction.getFromAccountId())
-                            .cache();
-
-                    Mono<AccountDetailsResponse> toAccountMono = accountServiceClient
-                            .getAccountDetails(foundTransaction.getToAccountId())
-                            .cache();
-
-                    return Mono.zip(fromAccountMono, toAccountMono)
-                            .flatMap(tuple -> {
-                                AccountDetailsResponse fromAccount = tuple.getT1();
-                                AccountDetailsResponse toAccount = tuple.getT2();
-
-                                if (fromAccount.getBalance().compareTo(foundTransaction.getAmount()) < 0) {
-                                    foundTransaction.setStatus(TransactionStatus.FAILED);
-                                    return Mono.fromCallable(() -> transactionRepository.save(foundTransaction))
-                                            .then(Mono.error(new InsufficientBalanceException("Insufficient funds.")));
-                                }
-
-                                return accountServiceClient.transferFunds(
-                                        foundTransaction.getFromAccountId(),
-                                        foundTransaction.getToAccountId(),
-                                        foundTransaction.getAmount()).then(Mono.fromCallable(() -> {
-                                            foundTransaction.setStatus(TransactionStatus.SUCCESS);
-                                            Transaction updated = transactionRepository.save(foundTransaction);
-                                            return new TransferResponse(
-                                                    updated.getId(),
-                                                    updated.getStatus(),
-                                                    updated.getTimestamp());
-                                        }));
+                    return accountServiceClient.transferFunds(
+                            foundTransaction.getFromAccountId(),
+                            foundTransaction.getToAccountId(),
+                            foundTransaction.getAmount()).then(Mono.fromCallable(() -> {
+                                foundTransaction.setStatus(TransactionStatus.SUCCESS);
+                                Transaction updated = transactionRepository.save(foundTransaction);
+                                return new TransferResponse(
+                                        updated.getId(),
+                                        updated.getStatus(),
+                                        updated.getTimestamp());
+                            }))
+                            .onErrorResume(e -> {
+                                foundTransaction.setStatus(TransactionStatus.FAILED);
+                                transactionRepository.save(foundTransaction);
+                                return Mono.error(e);
                             });
                 });
+
     }
 
     @Override
     public Flux<TransactionDetail> getTransactionsForAccount(UUID accountId) {
         return accountServiceClient.getAccountDetails(accountId)
-                .then(Mono.fromCallable(() ->
-                        transactionRepository.findByFromAccountIdOrToAccountId(accountId, accountId)))
+                .then(Mono.fromCallable(
+                        () -> transactionRepository.findByFromAccountIdOrToAccountId(accountId, accountId)))
                 .flatMapMany(Flux::fromIterable)
                 .filter(tx -> tx.getStatus() == TransactionStatus.SUCCESS)
                 .map(tx -> {
@@ -118,10 +151,8 @@ public class TransactionServiceImpl implements TransactionService {
                             tx.getToAccountId(),
                             amount,
                             tx.getDescription(),
-                            tx.getTimestamp()
-                    );
+                            tx.getTimestamp());
                 });
     }
-
 
 }

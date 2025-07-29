@@ -10,7 +10,10 @@ public enum ErrorType {
     ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "Not Found", "Account not found"),
     VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "Validation Error", "Invalid request data"),
     BAD_REQUEST(HttpStatus.BAD_REQUEST, "Bad Request", "Invalid input format"),
-    INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "Unexpected error");
+    INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "Unexpected error"),
+    SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Service Error", "An error occurred in the service"),
+    DOWNSTREAM_SERVICE_ERROR(HttpStatus.BAD_GATEWAY, "Downstream Service Error",
+            "Error communicating with downstream service");
 
     private final HttpStatus status;
     private final String title;
