@@ -33,6 +33,5 @@ public class AccountController {
             @PathVariable String accountId) {
         return accountServiceClient.getAccountDetails(accountId)
                 .map(ResponseEntity::ok);
-                // .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 }
