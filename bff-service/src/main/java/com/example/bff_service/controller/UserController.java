@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
@@ -25,10 +26,14 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public Mono<ResponseEntity<UserRegistrationResponse>> registerUser(
-            @RequestBody UserRegistrationRequest request) {
+    public Mono<ResponseEntity<AppNameWrappedResponse<UserRegistrationResponse>>> registerUser(
+            @RequestBody UserRegistrationRequest request, @RequestHeader("APP-NAME") String appName) {
         return userServiceClient.registerUser(request)
-                .map(ResponseEntity::ok);
+                .map(response -> {
+                    AppNameWrappedResponse<UserRegistrationResponse> wrapped = new AppNameWrappedResponse<>(appName,
+                            response);
+                    return ResponseEntity.ok(wrapped);
+                });
     }
 
     @PostMapping("/login")
