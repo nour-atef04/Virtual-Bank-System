@@ -37,9 +37,13 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public Mono<ResponseEntity<UserLoginResponse>> loginUser(
-            @RequestBody UserLoginRequest request) {
+    public Mono<ResponseEntity<AppNameWrappedResponse<UserLoginResponse>>> loginUser(
+            @RequestBody UserLoginRequest request, @RequestHeader("APP-NAME") String appName) {
         return userServiceClient.loginUser(request)
-                .map(ResponseEntity::ok);
+                .map(response -> {
+                    AppNameWrappedResponse<UserLoginResponse> wrapped = new AppNameWrappedResponse<>(appName,
+                            response);
+                    return ResponseEntity.ok(wrapped);
+                });
     }
 }

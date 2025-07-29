@@ -5,8 +5,10 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
 
+import com.example.bff_service.dto.AppNameWrappedResponse;
+
+import reactor.core.publisher.Mono;
 
 @Aspect
 @Component
@@ -30,12 +32,19 @@ public class LoggingAspect {
 
         if (result instanceof Mono) {
             return ((Mono<?>) result)
+                    // .doOnSuccess(response -> {
+                    // if (response instanceof ResponseEntity) {
+                    // Object body = ((ResponseEntity<?>) response).getBody();
+                    // loggingProducer.sendLog(body, "RESPONSE");
+                    // }
+                    // })
                     .doOnSuccess(response -> {
-                        if (response instanceof ResponseEntity) {
-                            Object body = ((ResponseEntity<?>) response).getBody();
-                            loggingProducer.sendLog(body, "RESPONSE");
+                        if (response instanceof ResponseEntity<?> resEntity &&
+                                resEntity.getBody() instanceof AppNameWrappedResponse<?> wrappedBody) {
+                            loggingProducer.sendLog(wrappedBody, "RESPONSE");
                         }
                     })
+
                     .doOnError(e -> log.error("Error processing request", e));
         }
 

@@ -12,5 +12,4 @@ import lombok.NoArgsConstructor;
 public class UserRegistrationResponse {
     private String userId;
     private String username;
-    private String appName;
 }

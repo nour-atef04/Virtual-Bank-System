@@ -1,11 +1,15 @@
 package com.example.bff_service.controller;
 
+import com.example.bff_service.dto.AppNameWrappedResponse;
 import com.example.bff_service.dto.DashboardResponse;
+import com.example.bff_service.dto.UserLoginRequest;
+import com.example.bff_service.dto.UserLoginResponse;
 import com.example.bff_service.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
@@ -14,12 +18,20 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/bff")
 @RequiredArgsConstructor
 public class DashboardController {
+
     private final DashboardService dashboardService;
 
     @GetMapping("/dashboard/{userId}")
-    public Mono<ResponseEntity<?>> getDashboard(@PathVariable String userId) {
+    public Mono<ResponseEntity<AppNameWrappedResponse<?>>> getDashboard(
+            @PathVariable String userId,
+            @RequestHeader("APP-NAME") String appName) {
+
         Mono<DashboardResponse> cachedResponse = dashboardService.getDashboardData(userId).cache();
 
-        return cachedResponse.map(ResponseEntity::ok);
+        return cachedResponse.map(dashboardResponse -> {
+            AppNameWrappedResponse<DashboardResponse> wrapped = new AppNameWrappedResponse<>(appName,
+                    dashboardResponse);
+            return ResponseEntity.ok(wrapped);
+        });
     }
 }
