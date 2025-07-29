@@ -14,6 +14,28 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
+// @RestController
+// @RequestMapping("/bff")
+// @RequiredArgsConstructor
+// public class DashboardController {
+
+//     private final DashboardService dashboardService;
+
+//     @GetMapping("/dashboard/{userId}")
+//     public Mono<ResponseEntity<AppNameWrappedResponse<?>>> getDashboard(
+//             @PathVariable String userId,
+//             @RequestHeader("APP-NAME") String appName) {
+
+//         Mono<DashboardResponse> cachedResponse = dashboardService.getDashboardData(userId).cache();
+
+//         return cachedResponse.map(dashboardResponse -> {
+//             AppNameWrappedResponse<DashboardResponse> wrapped = new AppNameWrappedResponse<>(appName,
+//                     dashboardResponse);
+//             return ResponseEntity.ok(wrapped);
+//         });
+//     }
+// }
+
 @RestController
 @RequestMapping("/bff")
 @RequiredArgsConstructor
@@ -22,16 +44,12 @@ public class DashboardController {
     private final DashboardService dashboardService;
 
     @GetMapping("/dashboard/{userId}")
-    public Mono<ResponseEntity<AppNameWrappedResponse<?>>> getDashboard(
-            @PathVariable String userId,
-            @RequestHeader("APP-NAME") String appName) {
-
+    public Mono<ResponseEntity<DashboardResponse>> getDashboard(@PathVariable String userId) {
         Mono<DashboardResponse> cachedResponse = dashboardService.getDashboardData(userId).cache();
 
-        return cachedResponse.map(dashboardResponse -> {
-            AppNameWrappedResponse<DashboardResponse> wrapped = new AppNameWrappedResponse<>(appName,
-                    dashboardResponse);
-            return ResponseEntity.ok(wrapped);
-        });
+        return cachedResponse.map(ResponseEntity::ok);
     }
 }
+
+
+

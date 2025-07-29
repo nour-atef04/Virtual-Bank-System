@@ -16,6 +16,7 @@ public class AccountController {
     @PostMapping
     public Mono<ResponseEntity<AccountCreationResponse>> createAccount(
             @RequestBody AccountCreationRequest request) {
+                
         return accountServiceClient.createAccount(request)
                 .map(ResponseEntity::ok);
     }

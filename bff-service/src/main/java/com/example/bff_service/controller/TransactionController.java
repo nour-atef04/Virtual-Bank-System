@@ -15,27 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
-// @RestController
-// @RequestMapping("/transactions")
-// @RequiredArgsConstructor
-// public class TransactionController {
-//     private final TransactionServiceClient transactionServiceClient;
-
-//     @PostMapping("/transfer/initiation")
-//     public Mono<ResponseEntity<TransactionInitiationResponse>> initiateTransfer(
-//             @RequestBody TransactionInitiationRequest request) {
-//         return transactionServiceClient.initiateTransfer(request)
-//                 .map(ResponseEntity::ok);
-//     }
-
-//     @PostMapping("/transfer/execution")
-//     public Mono<ResponseEntity<TransactionExecutionResponse>> executeTransfer(
-//             @RequestBody TransactionExecutionRequest request) {
-//         return transactionServiceClient.executeTransfer(request)
-//                 .map(ResponseEntity::ok);
-//     }
-// }
-
 @RestController
 @RequestMapping("/transactions")
 @RequiredArgsConstructor
@@ -43,28 +22,49 @@ public class TransactionController {
     private final TransactionServiceClient transactionServiceClient;
 
     @PostMapping("/transfer/initiation")
-    public Mono<ResponseEntity<AppNameWrappedResponse<?>>> initiateTransfer(
-            @RequestBody TransactionInitiationRequest request,
-            @RequestHeader("APP-NAME") String appName) {
-
+    public Mono<ResponseEntity<TransactionInitiationResponse>> initiateTransfer(
+            @RequestBody TransactionInitiationRequest request) {
         return transactionServiceClient.initiateTransfer(request)
-                .map(response -> {
-                    AppNameWrappedResponse<TransactionInitiationResponse> wrapped = new AppNameWrappedResponse<>(
-                            appName, response);
-                    return ResponseEntity.ok(wrapped);
-                });
+                .map(ResponseEntity::ok);
     }
 
     @PostMapping("/transfer/execution")
-    public Mono<ResponseEntity<AppNameWrappedResponse<?>>> executeTransfer(
-            @RequestBody TransactionExecutionRequest request,
-            @RequestHeader("APP-NAME") String appName) {
-
+    public Mono<ResponseEntity<TransactionExecutionResponse>> executeTransfer(
+            @RequestBody TransactionExecutionRequest request) {
         return transactionServiceClient.executeTransfer(request)
-                .map(response -> {
-                    AppNameWrappedResponse<TransactionExecutionResponse> wrapped = new AppNameWrappedResponse<>(appName,
-                            response);
-                    return ResponseEntity.ok(wrapped);
-                });
+                .map(ResponseEntity::ok);
     }
 }
+
+// @RestController
+// @RequestMapping("/transactions")
+// @RequiredArgsConstructor
+// public class TransactionController {
+//     private final TransactionServiceClient transactionServiceClient;
+
+//     @PostMapping("/transfer/initiation")
+//     public Mono<ResponseEntity<AppNameWrappedResponse<?>>> initiateTransfer(
+//             @RequestBody TransactionInitiationRequest request,
+//             @RequestHeader("APP-NAME") String appName) {
+
+//         return transactionServiceClient.initiateTransfer(request)
+//                 .map(response -> {
+//                     AppNameWrappedResponse<TransactionInitiationResponse> wrapped = new AppNameWrappedResponse<>(
+//                             appName, response);
+//                     return ResponseEntity.ok(wrapped);
+//                 });
+//     }
+
+//     @PostMapping("/transfer/execution")
+//     public Mono<ResponseEntity<AppNameWrappedResponse<?>>> executeTransfer(
+//             @RequestBody TransactionExecutionRequest request,
+//             @RequestHeader("APP-NAME") String appName) {
+
+//         return transactionServiceClient.executeTransfer(request)
+//                 .map(response -> {
+//                     AppNameWrappedResponse<TransactionExecutionResponse> wrapped = new AppNameWrappedResponse<>(appName,
+//                             response);
+//                     return ResponseEntity.ok(wrapped);
+//                 });
+//     }
+// }
