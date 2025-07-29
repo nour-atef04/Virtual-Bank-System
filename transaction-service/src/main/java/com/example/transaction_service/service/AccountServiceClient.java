@@ -28,12 +28,15 @@ public class AccountServiceClient {
         return webClient.get()
                 .uri("/{accountId}", accountId)
                 .retrieve()
-                .onStatus(
-                        status -> status.is5xxServerError(),
-                        response -> Mono.error(new IllegalStateException("Account service unavailable")))
-                .onStatus(
-                        status -> status == HttpStatus.NOT_FOUND,
-                        response -> Mono.error(new AccountNotFoundException("Invalid 'from' or 'to' account ID.")))
+                // .onStatus(
+                // status -> status.is5xxServerError(),
+                // response -> Mono.error(new IllegalStateException("Account service
+                // unavailable")))
+                // .onStatus(
+                // status -> status == HttpStatus.NOT_FOUND,
+                // response -> Mono.error(new AccountNotFoundException("Invalid 'from' or 'to'
+                // account ID.")))
+                .onStatus(HttpStatusCode::isError, WebClientErrorHandler::handle)
                 .bodyToMono(AccountDetailsResponse.class);
     }
 
