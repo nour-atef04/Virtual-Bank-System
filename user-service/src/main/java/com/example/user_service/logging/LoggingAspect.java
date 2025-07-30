@@ -60,16 +60,14 @@ public class LoggingAspect {
         loggingProducer.sendLog(responseBody, "RESPONSE");
     }
 
-    @AfterThrowing(pointcut = "execution(* com.example.user_service..*.*(..))", throwing = "ex")
+    @AfterThrowing(pointcut = "execution(* com.example.user_service.controller..*.*(..))", throwing = "ex")
     public void logAfterException(JoinPoint joinPoint, Throwable ex) {
         Map<String, Object> errorLog = new LinkedHashMap<>();
 
-        ResponseStatus responseStatus = AnnotationUtils.findAnnotation(ex.getClass(), ResponseStatus.class);
-        if (responseStatus != null) {
-            errorLog.put("status", responseStatus.code().value());
-            errorLog.put("error", responseStatus.reason().isEmpty()
-                    ? responseStatus.code().getReasonPhrase()
-                    : responseStatus.reason());
+        if (ex instanceof BaseServiceException baseEx) {
+            ErrorType errorType = baseEx.getErrorType();
+            errorLog.put("status", errorType.getStatus().value());
+            errorLog.put("error", errorType.getTitle());
         } else {
             errorLog.put("status", 500);
             errorLog.put("error", "Internal Server Error");
