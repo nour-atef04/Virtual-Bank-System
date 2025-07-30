@@ -17,7 +17,7 @@ import java.util.List;
 
 import static org.mockito.Mockito.*;
 
-class DashboardServiceImplTest {
+class DashboardServiceTest {
 
     @Mock
     private UserServiceClient userServiceClient;

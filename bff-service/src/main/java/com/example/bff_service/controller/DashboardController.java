@@ -2,8 +2,6 @@ package com.example.bff_service.controller;
 
 import com.example.bff_service.dto.AppNameWrappedResponse;
 import com.example.bff_service.dto.DashboardResponse;
-import com.example.bff_service.dto.UserLoginRequest;
-import com.example.bff_service.dto.UserLoginResponse;
 import com.example.bff_service.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
