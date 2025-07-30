@@ -54,7 +54,6 @@ public class GlobalExceptionHandler {
 
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ErrorResponse> handleOtherExceptions(Exception ex) {
-                System.out.println("Unhandled exception: " + ex.getMessage());
                 ErrorResponse error = ErrorResponse.of(ErrorType.INTERNAL_ERROR, ex.getMessage());
                 loggingProducer.sendLog(error, "ERROR");
                 return ResponseEntity.status(ErrorType.INTERNAL_ERROR.getStatus()).body(error);
