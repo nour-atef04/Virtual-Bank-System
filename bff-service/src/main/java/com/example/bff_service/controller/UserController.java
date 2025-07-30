@@ -13,6 +13,40 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
+// @RestController
+// @RequestMapping("/users")
+// @RequiredArgsConstructor
+// public class UserController {
+//     private final UserServiceClient userServiceClient;
+
+//     @GetMapping("/{userId}/profile")
+//     public Mono<ResponseEntity<UserProfileDto>> getProfile(@PathVariable String userId) {
+//         return userServiceClient.getUserProfile(userId)
+//                 .map(ResponseEntity::ok);
+//     }
+
+//     @PostMapping("/register")
+//     public Mono<ResponseEntity<AppNameWrappedResponse<UserRegistrationResponse>>> registerUser(
+//             @RequestBody UserRegistrationRequest request, @RequestHeader("APP-NAME") String appName) {
+//         return userServiceClient.registerUser(request)
+//                 .map(response -> {
+//                     AppNameWrappedResponse<UserRegistrationResponse> wrapped = new AppNameWrappedResponse<>(appName,
+//                             response);
+//                     return ResponseEntity.ok(wrapped);
+//                 });
+//     }
+
+//     @PostMapping("/login")
+//     public Mono<ResponseEntity<AppNameWrappedResponse<UserLoginResponse>>> loginUser(
+//             @RequestBody UserLoginRequest request, @RequestHeader("APP-NAME") String appName) {
+//         return userServiceClient.loginUser(request)
+//                 .map(response -> {
+//                     AppNameWrappedResponse<UserLoginResponse> wrapped = new AppNameWrappedResponse<>(appName,
+//                             response);
+//                     return ResponseEntity.ok(wrapped);
+//                 });
+//     }
+
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -26,24 +60,16 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public Mono<ResponseEntity<AppNameWrappedResponse<UserRegistrationResponse>>> registerUser(
-            @RequestBody UserRegistrationRequest request, @RequestHeader("APP-NAME") String appName) {
+    public Mono<ResponseEntity<UserRegistrationResponse>> registerUser(
+            @RequestBody UserRegistrationRequest request) {
         return userServiceClient.registerUser(request)
-                .map(response -> {
-                    AppNameWrappedResponse<UserRegistrationResponse> wrapped = new AppNameWrappedResponse<>(appName,
-                            response);
-                    return ResponseEntity.ok(wrapped);
-                });
+                .map(ResponseEntity::ok);
     }
 
     @PostMapping("/login")
-    public Mono<ResponseEntity<AppNameWrappedResponse<UserLoginResponse>>> loginUser(
-            @RequestBody UserLoginRequest request, @RequestHeader("APP-NAME") String appName) {
+    public Mono<ResponseEntity<UserLoginResponse>> loginUser(
+            @RequestBody UserLoginRequest request) {
         return userServiceClient.loginUser(request)
-                .map(response -> {
-                    AppNameWrappedResponse<UserLoginResponse> wrapped = new AppNameWrappedResponse<>(appName,
-                            response);
-                    return ResponseEntity.ok(wrapped);
-                });
+                .map(ResponseEntity::ok);
     }
 }
