@@ -3,7 +3,6 @@ package com.aliaa.accountservice.exception;
 import java.util.stream.Collectors;
 
 import org.springframework.core.convert.ConversionFailedException;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.messaging.handler.annotation.support.MethodArgumentTypeMismatchException;
@@ -22,14 +21,6 @@ public class GlobalExceptionHandler {
         public GlobalExceptionHandler(LoggingProducer loggingProducer) {
                 this.loggingProducer = loggingProducer;
         }
-
-        @ExceptionHandler(BaseServiceException.class)
-        public ResponseEntity<ErrorResponse> handleBaseException(BaseServiceException ex) {
-                ErrorResponse error = ErrorResponse.of(ex.getErrorType(), ex.getMessage());
-                loggingProducer.sendLog(error, "ERROR");
-                return ResponseEntity.status(ex.getErrorType().getStatus()).body(error);
-        }
-
 
         @ExceptionHandler(MethodArgumentNotValidException.class)
         public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
@@ -53,8 +44,17 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(ErrorType.BAD_REQUEST.getStatus()).body(error);
         }
 
+        @ExceptionHandler(BaseServiceException.class)
+        public ResponseEntity<ErrorResponse> handleBaseException(BaseServiceException ex) {
+                ErrorResponse error = ErrorResponse.of(ex.getErrorType(), ex.getMessage());
+                loggingProducer.sendLog(error, "ERROR");
+                return ResponseEntity.status(ex.getErrorType().getStatus()).body(error);
+        }
+
+
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ErrorResponse> handleOtherExceptions(Exception ex) {
+                System.out.println("Unhandled exception: " + ex.getMessage());
                 ErrorResponse error = ErrorResponse.of(ErrorType.INTERNAL_ERROR, ex.getMessage());
                 loggingProducer.sendLog(error, "ERROR");
                 return ResponseEntity.status(ErrorType.INTERNAL_ERROR.getStatus()).body(error);
