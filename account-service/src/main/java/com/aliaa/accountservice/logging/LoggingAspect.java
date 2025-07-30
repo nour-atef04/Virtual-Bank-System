@@ -1,22 +1,16 @@
 package com.aliaa.accountservice.logging;
 
-import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 @Aspect
 @Component
-@Slf4j
 public class LoggingAspect {
 
     private final LoggingProducer loggingProducer;

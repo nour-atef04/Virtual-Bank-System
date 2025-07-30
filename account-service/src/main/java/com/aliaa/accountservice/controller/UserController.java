@@ -4,7 +4,6 @@ import com.aliaa.accountservice.dto.AccountDetailsResponse;
 import com.aliaa.accountservice.model.Account;
 import com.aliaa.accountservice.service.AccountService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,7 +17,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
-@Slf4j
 public class UserController {
     private final AccountService accountService;
 

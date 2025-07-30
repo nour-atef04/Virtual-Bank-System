@@ -9,5 +9,5 @@ import org.springframework.context.annotation.Configuration;
 @Data
 public class AccountInactivityConfig {
     private int thresholdMinutes = 1440;
-    private int checkIntervalMinutes = 5;
+    private int checkIntervalMinutes = 60;
 }

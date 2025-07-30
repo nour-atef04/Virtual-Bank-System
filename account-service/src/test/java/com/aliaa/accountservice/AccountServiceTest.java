@@ -36,6 +36,7 @@ class AccountServiceTest {
 
     @Mock
     private WebClient webClient;
+    
     @Mock
     private WebClient.RequestHeadersUriSpec requestHeadersUriSpec;
 
@@ -102,18 +103,13 @@ class AccountServiceTest {
     @Test
     void getAccountById_Success() {
         UUID accountId = testAccount.getId();
-        when(webClientBuilder.build()).thenReturn(webClient);
-        when(webClient.get()).thenReturn(requestHeadersUriSpec);
-        when(requestHeadersUriSpec.uri(anyString(), any(UUID.class))).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.bodyToMono(UserProfileResponse.class)).thenReturn(Mono.just(testUserProfile));
-        when(accountRepository.findById(testAccount.getId())).thenReturn(Optional.of(testAccount));
+
+        when(accountRepository.findById(accountId)).thenReturn(Optional.of(testAccount));
 
         Account foundAccount = accountService.getAccountById(accountId);
 
         assertNotNull(foundAccount);
         assertEquals(testAccount.getId(), foundAccount.getId());
-
         verify(accountRepository).findById(accountId);
     }
 
