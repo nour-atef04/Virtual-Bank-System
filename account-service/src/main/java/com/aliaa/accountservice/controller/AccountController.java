@@ -27,26 +27,18 @@ public class AccountController {
 
         @PostMapping
         public Mono<ResponseEntity<AccountResponse>> createAccount(
-                        @Valid @RequestBody CreateAccountRequest request) {
-
-                AccountType type;
-                try {
-                        type = AccountType.valueOf(request.getAccountType().toUpperCase());
-                } catch (IllegalArgumentException e) {
-                        return Mono.error(new InvalidAccountCreationException(
-                                        "Invalid account type: " + request.getAccountType()));
-                }
+                @Valid @RequestBody CreateAccountRequest request) {
 
                 return accountService.createAccount(
                                 request.getUserId(),
-                                type,
+                                request.getAccountType(),
                                 request.getInitialBalance())
-                                .map(account -> ResponseEntity.status(HttpStatus.CREATED)
-                                                .body(AccountResponse.builder()
-                                                                .accountId(account.getId())
-                                                                .accountNumber(account.getAccountNumber())
-                                                                .message("Account created successfully.")
-                                                                .build()));
+                        .map(account -> ResponseEntity.status(HttpStatus.CREATED)
+                                .body(AccountResponse.builder()
+                                        .accountId(account.getId())
+                                        .accountNumber(account.getAccountNumber())
+                                        .message("Account created successfully.")
+                                        .build()));
         }
 
         @GetMapping("/{accountId}")
