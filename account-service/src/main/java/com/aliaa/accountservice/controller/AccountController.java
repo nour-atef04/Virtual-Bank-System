@@ -4,7 +4,9 @@ import com.aliaa.accountservice.dto.AccountDetailsResponse;
 import com.aliaa.accountservice.dto.AccountResponse;
 import com.aliaa.accountservice.dto.CreateAccountRequest;
 import com.aliaa.accountservice.dto.TransferRequest;
+import com.aliaa.accountservice.exception.InvalidAccountCreationException;
 import com.aliaa.accountservice.model.Account;
+import com.aliaa.accountservice.model.AccountType;
 import com.aliaa.accountservice.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,57 +23,57 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AccountController {
 
-    private final AccountService accountService;
+        private final AccountService accountService;
 
-    @PostMapping
-    public Mono<ResponseEntity<AccountResponse>> createAccount(
-            @Valid @RequestBody CreateAccountRequest request) {
+        @PostMapping
+        public Mono<ResponseEntity<AccountResponse>> createAccount(
+                        @Valid @RequestBody CreateAccountRequest request) {
 
-        return accountService.createAccount(
-                        request.getUserId(),
-                        request.getAccountType(),
-                        request.getInitialBalance()
-                )
-                .map(account -> ResponseEntity.status(HttpStatus.CREATED)
-                        .body(AccountResponse.builder()
+                AccountType type;
+                try {
+                        type = AccountType.valueOf(request.getAccountType().toUpperCase());
+                } catch (IllegalArgumentException e) {
+                        return Mono.error(new InvalidAccountCreationException(
+                                        "Invalid account type: " + request.getAccountType()));
+                }
+
+                return accountService.createAccount(
+                                request.getUserId(),
+                                type,
+                                request.getInitialBalance())
+                                .map(account -> ResponseEntity.status(HttpStatus.CREATED)
+                                                .body(AccountResponse.builder()
+                                                                .accountId(account.getId())
+                                                                .accountNumber(account.getAccountNumber())
+                                                                .message("Account created successfully.")
+                                                                .build()));
+        }
+
+        @GetMapping("/{accountId}")
+        public ResponseEntity<?> getAccountDetails(@PathVariable UUID accountId) {
+                Account account = accountService.getAccountById(accountId);
+
+                AccountDetailsResponse response = AccountDetailsResponse.builder()
                                 .accountId(account.getId())
                                 .accountNumber(account.getAccountNumber())
-                                .message("Account created successfully.")
-                                .build()
-                        ));
-    }
+                                .accountType(account.getAccountType())
+                                .balance(account.getBalance())
+                                .status(account.getStatus())
+                                .build();
 
-    @GetMapping("/{accountId}")
-    public ResponseEntity<?> getAccountDetails(@PathVariable UUID accountId) {
-        Account account = accountService.getAccountById(accountId);
+                return ResponseEntity.ok(response);
+        }
 
-        AccountDetailsResponse response = AccountDetailsResponse.builder()
-                .accountId(account.getId())
-                .accountNumber(account.getAccountNumber())
-                .accountType(account.getAccountType())
-                .balance(account.getBalance())
-                .status(account.getStatus())
-                .build();
+        @PutMapping("/transfer")
+        public ResponseEntity<?> transferFunds(
+                        @Valid @RequestBody TransferRequest request) {
+                accountService.transferFunds(
+                                request.getFromAccountId(),
+                                request.getToAccountId(),
+                                request.getAmount());
 
-        return ResponseEntity.ok(response);
-    }
-
-
-    @PutMapping("/transfer")
-    public ResponseEntity<?> transferFunds(
-            @Valid @RequestBody TransferRequest request
-    ) {
-        accountService.transferFunds(
-                request.getFromAccountId(),
-                request.getToAccountId(),
-                request.getAmount()
-        );
-
-        return ResponseEntity.ok().body(
-                Map.of("message", "Transfer successful.")
-        );
-    }
-
-
+                return ResponseEntity.ok().body(
+                                Map.of("message", "Transfer successful."));
+        }
 
 }

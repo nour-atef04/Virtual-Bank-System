@@ -21,7 +21,8 @@ public class CreateAccountRequest {
     private UUID userId;
 
     @NotNull(message = "Account type is required")
-    private AccountType accountType;
+    // private AccountType accountType;
+    private String accountType;
 
     @NotNull(message = "Initial balance is required")
     @DecimalMin(value = "0.00", message = "Initial balance must be at least 0")
