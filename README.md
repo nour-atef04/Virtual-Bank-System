@@ -76,6 +76,9 @@ Kafka consumer that logs all requests/responses into a dump table.
         "dateTime": "{local date time}"
         }`
 
+## Unit Testing
+Each microservice includes its own unit test suite written using JUnit 5 and Mockito, ensuring proper behavior and validation of key components.
+
 ## WSO2 API Gateway
 Central access point for all external clients.
 
