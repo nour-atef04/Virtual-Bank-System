@@ -4,9 +4,7 @@ import com.aliaa.accountservice.dto.AccountDetailsResponse;
 import com.aliaa.accountservice.dto.AccountResponse;
 import com.aliaa.accountservice.dto.CreateAccountRequest;
 import com.aliaa.accountservice.dto.TransferRequest;
-import com.aliaa.accountservice.exception.InvalidAccountCreationException;
 import com.aliaa.accountservice.model.Account;
-import com.aliaa.accountservice.model.AccountType;
 import com.aliaa.accountservice.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,26 +25,18 @@ public class AccountController {
 
         @PostMapping
         public Mono<ResponseEntity<AccountResponse>> createAccount(
-                        @Valid @RequestBody CreateAccountRequest request) {
-
-                AccountType type;
-                try {
-                        type = AccountType.valueOf(request.getAccountType().toUpperCase());
-                } catch (IllegalArgumentException e) {
-                        return Mono.error(new InvalidAccountCreationException(
-                                        "Invalid account type: " + request.getAccountType()));
-                }
+                @Valid @RequestBody CreateAccountRequest request) {
 
                 return accountService.createAccount(
                                 request.getUserId(),
-                                type,
+                                request.getAccountType(),
                                 request.getInitialBalance())
-                                .map(account -> ResponseEntity.status(HttpStatus.CREATED)
-                                                .body(AccountResponse.builder()
-                                                                .accountId(account.getId())
-                                                                .accountNumber(account.getAccountNumber())
-                                                                .message("Account created successfully.")
-                                                                .build()));
+                        .map(account -> ResponseEntity.status(HttpStatus.CREATED)
+                                .body(AccountResponse.builder()
+                                        .accountId(account.getId())
+                                        .accountNumber(account.getAccountNumber())
+                                        .message("Account created successfully.")
+                                        .build()));
         }
 
         @GetMapping("/{accountId}")

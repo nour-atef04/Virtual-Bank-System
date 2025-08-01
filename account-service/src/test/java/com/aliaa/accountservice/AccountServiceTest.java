@@ -91,7 +91,7 @@ class AccountServiceTest {
 
         Account createdAccount = accountService.createAccount(
                 testUserId,
-                AccountType.SAVINGS,
+                "SAVINGS",
                 BigDecimal.valueOf(1000)
         ).block();
 

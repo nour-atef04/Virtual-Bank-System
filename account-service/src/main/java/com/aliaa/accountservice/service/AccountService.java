@@ -31,8 +31,17 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final WebClient.Builder webClientBuilder;
 
+
     @Transactional
-    public Mono<Account> createAccount(UUID userId, AccountType accountType, BigDecimal initialBalance) {
+    public Mono<Account> createAccount(UUID userId, String accountTypeStr, BigDecimal initialBalance) {
+        AccountType type;
+        try {
+            type = AccountType.valueOf(accountTypeStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return Mono.error(new InvalidAccountCreationException(
+                    "Invalid account type: " + accountTypeStr));
+        }
+
         return webClientBuilder.build()
                 .get()
                 .uri("http://user-service/users/{userId}/profile", userId)
@@ -48,13 +57,13 @@ public class AccountService {
                 .bodyToMono(UserProfileResponse.class)
                 .cache()
                 .flatMap(userProfile -> {
-                    validateAccountCreationParameters(accountType, initialBalance);
+                    validateAccountCreationParameters(type, initialBalance);
                     String accountNumber = generateAccountNumber();
 
                     Account account = Account.builder()
                             .userId(userId)
                             .accountNumber(accountNumber)
-                            .accountType(accountType)
+                            .accountType(type)
                             .balance(initialBalance)
                             .status(AccountStatus.ACTIVE)
                             .build();
