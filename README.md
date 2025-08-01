@@ -76,5 +76,15 @@ Kafka consumer that logs all requests/responses into a dump table.
         "dateTime": "{local date time}"
         }`
 
+## WSO2 API Gateway
+Central access point for all external clients.
+
+* Responsiilities:
+  - OAuth2 & API Key authentication
+  - Routing to internal services
+ 
+* APIs exposed:
+
+<img width="643" height="730" alt="Screenshot 2025-08-01 212929" src="https://github.com/user-attachments/assets/70c31716-b9f4-4022-be0b-2a339a549c9b" />
 
        
