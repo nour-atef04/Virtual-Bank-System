@@ -85,14 +85,14 @@ Central access point for all external clients.
  
 * APIs exposed:
   
-    [User Service]
-    POST   /register                              → Register a new user
-    POST   /login                                 → User login
+    - [User Service]
+      - POST   /register                              → Register a new user
+      - POST   /login                                 → User login
     
-    [BFF Service]
-    GET    /dashboard/{userId}                    → Fetch user dashboard
-    POST   /transactions/transfer/initiation      → Initiate transfer
-    POST   /transactions/transfer/execution       → Execute transfer
+    - [BFF Service]
+      - GET    /dashboard/{userId}                    → Fetch user dashboard
+      - POST   /transactions/transfer/initiation      → Initiate transfer
+      - POST   /transactions/transfer/execution       → Execute transfer
 
 
        
