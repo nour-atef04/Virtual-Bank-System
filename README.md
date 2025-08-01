@@ -27,4 +27,15 @@ This is a virtual banking system built to demonstrate modern microservices archi
         |          |          |           |
         V          V          V           V
        User     Account   Transaction   Logging
+
+## Microservices Breakdown
+### 1. User Service
+Handles user registration, login, and profile.
+
+* Passwords hashed with bcrypt
+* Endpoints:
+  - `POST /users/register`
+  - `POST /users/login`
+  - `GET /users/{userId}/profile`
+
        
