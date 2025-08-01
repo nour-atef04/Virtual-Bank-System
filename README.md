@@ -209,8 +209,39 @@ Start them using Docker Compose (make sure Docker is running before executing th
   
 `GET http://localhost:8084/bff/dashboard/{userId}`  
 
+## API Gateway Setup (WSO2)
+This project includes a WSO2 API Gateway setup with 4 APIs and 1 API Product to expose services securely via a centralized gateway.
 
+### 1. Start WSO2 API Manager
+* Access API Publisher at: `https://localhost:9443/publisher`       
 
+* Log in with:
+`username: admin`      
+`password: admin`
+
+### 2. Import Each API
+For each API ZIP:
+* Go to APIs > Import API
+* Choose Import as ZIP Archive
+* Upload the .zip file 
+* Click Save & Publish
+
+### 3. Import the API Product
+* Go to API Products > Import Product
+* Upload the .zip file which has the name `vbank`
+* Click Save & Publish
+
+### 4. Getting OAuth2 Access Token & API Key
+To access the APIs securely, you'll need to get either an OAuth2 access token or an API Key using the WSO2 Developer Portal.
+
+### 5. Testing with Postman
+`POST http://localhost:8280/vbank/register`  
+`POST http://localhost:8280/vbank/login`     
+`GET http://localhost:8280/vbank/dashboard/{userId}`    
+`POST http://localhost:8280/vbank/transactions/transfer/initiation`     
+`POST http://localhost:8280/vbank/transactions/transfer/execution`  
+
+Make sure to add either the OAuth2 Access Token or the API Key when testing.
    
 
        
