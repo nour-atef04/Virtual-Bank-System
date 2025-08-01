@@ -86,13 +86,31 @@ Central access point for all external clients.
 * APIs exposed:
   
     - [User Service]
-      - POST   /register                              → Register a new user
-      - POST   /login                                 → User login
+      - `POST   /register`                              → Register a new user
+      - `POST   /login`                                 → User login
     
     - [BFF Service]
-      - GET    /dashboard/{userId}                    → Fetch user dashboard
-      - POST   /transactions/transfer/initiation      → Initiate transfer
-      - POST   /transactions/transfer/execution       → Execute transfer
+      - `GET    /dashboard/{userId}`                    → Fetch user dashboard
+      - `POST   /transactions/transfer/initiation`      → Initiate transfer
+      - `POST   /transactions/transfer/execution`       → Execute transfer
+
+* API product (`/vbank`):
+this product is used to pacakage above APIs into 1 package.
+
+## Technology Stack
+* Backend: Java 21 + Spring Boot
+* Messaging: Apache Kafka
+* Build Tool: Maven
+* Database: MySQL
+* Gateway: WSO2 API Manager
+* Testing: Postman
+
+## Setup & Run Guide
+
+###1. Clone the Project
+
+`git clone https://github.com/nour-atef04/Virtual-Bank-System.git`
+`cd virtual-bank-system`
 
 
        
