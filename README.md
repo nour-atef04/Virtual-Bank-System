@@ -23,10 +23,10 @@ This is a virtual banking system built to demonstrate modern microservices archi
                         |
                         V
                      Services
-        -----------------------------------
-        |          |          |           |
-        V          V          V           V
-       User     Account   Transaction   Logging
+        -----------------------------------------------
+        |          |          |           |           |
+        V          V          V           V           V
+       User     Account   Transaction   Logging    Discovery (Eureka Server)
 
 ## Microservices Breakdown
 ### 1. User Service
@@ -107,10 +107,110 @@ this product is used to pacakage above APIs into 1 package.
 
 ## Setup & Run Guide
 
-###1. Clone the Project
+### 1. Clone the Project
 
 `git clone https://github.com/nour-atef04/Virtual-Bank-System.git`
 `cd virtual-bank-system`
 
+### 2. Start MySQL & Create Databases
+Ensure MySQL is running (default port: 3306)
+
+`CREATE DATABASE user_service;`       
+`CREATE DATABASE account_service;`         
+`CREATE DATABASE transaction_service;`     
+`CREATE DATABASE logging_service;`      
+
+### 3. Configure `application.properties`
+For each microservice, edit `src/main/resources/application.properties`:
+
+`spring.datasource.url=jdbc:mysql://localhost:3306/user_service`    
+`spring.datasource.username={your username}`      
+`spring.datasource.password={your password}`     
+
+
+Update DB name accordingly for each service.
+
+### 4. Start Kafka & Zookeeper
+Start them using Docker Compose (make sure Docker is running before executing the following command):
+`docker-compose up -d`
+
+### 5. Build & Run Microservices
+1. discovery-service (Eureka server, port = 8761) 
+2. logging-service (port = 8085)
+3. user-service (port = 8081)
+4. account-service (port = 8082)
+5. transaction-service (port = 8083) 
+6. bff-service (port = 8084)
+
+### 6. Postman API Testing
+
+* Register User
+       
+`POST http://localhost:8081/users/register`    
+`{`   
+  `"username": "john.doe",`     
+  `"password": "securePassword123",`      
+  `"email": "john.doe@example.com",`      
+  `"firstName": "John",`      
+  `"lastName": "Doe"`    
+`}`  
+
+* Login User
+     
+`POST http://localhost:8081/users/login`    
+`{`   
+  `"username": "john.doe",`     
+  `"password": "securePassword123"`         
+`}`  
+
+* Get User Profile
+  
+`GET http://localhost:8081/users/{userId}/profile`    
+
+* Create Account
+     
+`POST http://localhost:8082/accounts`   
+`{`    
+  `"userId": "replace-with-user-id",`   
+  `"accountType": "SAVINGS",`    
+  `"initialBalance": 100.00`   
+`}`     
+
+* Get Account By ID
+  
+`GET http://localhost:8082/accounts/{accountId}`     
+
+* Get All Accounts of a User
+  
+`GET http://localhost:8082/users/{userId}/accounts`     
+
+* Initiate Transfer
+  
+`POST http://localhost:8083/transactions/transfer/initiation`    
+`{`   
+  `"fromAccountId": "from-id",`     
+  `"toAccountId": "to-id",`      
+  `"amount": 30.00,`    
+  `"description": "Transfer to savings"`      
+`}`     
+
+* Execute Transfer
+  
+`POST http://localhost:8083/transactions/transfer/execution`   
+`{`    
+  `"transactionId": "replace-with-tx-id"`     
+`}`     
+
+* Get Transactions by Account
+  
+`GET http://localhost:8083/accounts/{accountId}/transactions`     
+
+* Get Dashboard View
+  
+`GET http://localhost:8084/bff/dashboard/{userId}`  
+
+
+
+   
 
        
