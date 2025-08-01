@@ -84,7 +84,15 @@ Central access point for all external clients.
   - Routing to internal services
  
 * APIs exposed:
+  
+    [User Service]
+    POST   /register                              → Register a new user
+    POST   /login                                 → User login
+    
+    [BFF Service]
+    GET    /dashboard/{userId}                    → Fetch user dashboard
+    POST   /transactions/transfer/initiation      → Initiate transfer
+    POST   /transactions/transfer/execution       → Execute transfer
 
-<img width="643" height="730" alt="Screenshot 2025-08-01 212929" src="https://github.com/user-attachments/assets/70c31716-b9f4-4022-be0b-2a339a549c9b" />
 
        
