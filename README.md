@@ -32,10 +32,49 @@ This is a virtual banking system built to demonstrate modern microservices archi
 ### 1. User Service
 Handles user registration, login, and profile.
 
-* Passwords hashed with bcrypt
+* Passwords hashed with `bcrypt`
 * Endpoints:
   - `POST /users/register`
   - `POST /users/login`
   - `GET /users/{userId}/profile`
+
+### 2. Account Service
+Handles account creation, balance checking, and transfers.
+
+* Auto-deactivates inactive accounts after 24h
+* Endpoints:
+  - `POST /accounts`
+  - `GET /accounts/{accountId}`
+  - `GET /users/{userId}/accounts`
+  - `PUT /accounts/transfer`
+ 
+### 3. Transaction Service
+Handles fund transfers and transaction history.
+
+* Two-step fund transfer (initiation + execution)
+* Endpoints:
+  - `POST /transactions/transfer/initiation`
+  - `POST /transactions/transfer/execution`
+  - `GET /accounts/{accountId}/transactions`
+
+### 4. BFF (Backend for Frontend)
+Aggregates and simplifies frontend API calls.
+
+* Endpoints:
+  - `GET /bff/dashboard/{userId}`
+  - `GET /bff/dashboard/{userId}`
+  - `POST /bff/transactions/transfer/execution`
+ 
+### 5. Logging Microservice
+Kafka consumer that logs all requests/responses into a dump table.
+
+* Kafka producer in all services
+* Log format:
+      `{
+        "message": "{escaped JSON}",
+        "messageType": "REQUEST" | "RESPONSE",
+        "dateTime": "{local date time}"
+        }`
+
 
        
